@@ -25,6 +25,7 @@ export default function DayPage() {
   const [confirmDelete, setConfirmDelete] = useState<{id:string;type:'entry'|'note'}|null>(null)
   const [toast, setToast] = useState('')
   const [loadingMsg, setLoadingMsg] = useState('')
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
 
   const showToast = (msg: string) => {
     setToast(msg)
@@ -161,7 +162,11 @@ export default function DayPage() {
             </button>
           </div>
         ) : (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:12 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: entries.length === 1 ? '1fr' : 'repeat(2, 1fr)',
+            gap: 12
+          }}>
             {entries.map(entry => (
               <div key={entry.id}>
                 <div
@@ -169,7 +174,9 @@ export default function DayPage() {
                   style={{
                     aspectRatio: entry.aspect_ratio.replace(':', '/'),
                     borderRadius: 'var(--radius-md)',
+                    cursor: 'pointer',
                   }}
+                  onClick={() => !processingId && setLightboxUrl(entry.generated_image_url)}
                 >
                   <img src={entry.generated_image_url} alt="" loading="lazy" />
                   {processingId === entry.id && (
@@ -182,21 +189,21 @@ export default function DayPage() {
                     </div>
                   )}
                 </div>
-                <div className="entry-actions" style={{ marginTop:6 }}>
+                <div className="entry-actions" style={{ marginTop:8, flexWrap:'wrap' }}>
                   <button className="entry-action-btn" onClick={() => handleDownload(entry.generated_image_url)} title={t('download')}>
-                    <Download size={12} />
+                    <Download size={14} /> {entries.length === 1 ? t('download') : ''}
                   </button>
                   <button className="entry-action-btn" onClick={() => handleCopyImage(entry.generated_image_url)} title={t('copy')}>
-                    <Copy size={12} />
+                    <Copy size={14} /> {entries.length === 1 ? t('copy') : ''}
                   </button>
                   <button className="entry-action-btn" onClick={() => handleShare(entry.generated_image_url)} title={t('share')}>
-                    <Share2 size={12} />
+                    <Share2 size={14} /> {entries.length === 1 ? t('share') : ''}
                   </button>
                   <button className="entry-action-btn" onClick={() => handleRegenerate(entry)} title={t('regenerate')} disabled={!!processingId}>
-                    <RefreshCw size={12} />
+                    <RefreshCw size={14} /> {entries.length === 1 ? t('regenerate') : ''}
                   </button>
                   <button className="entry-action-btn danger" onClick={() => handleDelete(entry.id, 'entry')} title={t('delete')}>
-                    <Trash2 size={12} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
                 {entry.input_text && (
@@ -316,6 +323,39 @@ export default function DayPage() {
 
       {/* Toast */}
       {toast && <div className="toast">{toast}</div>}
+
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          style={{
+            position:'fixed', inset:0, background:'rgba(0,0,0,0.92)',
+            display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+            zIndex:80, padding:16,
+          }}
+          onClick={() => setLightboxUrl(null)}
+        >
+          <img
+            src={lightboxUrl}
+            alt=""
+            style={{ maxWidth:'100%', maxHeight:'80dvh', borderRadius:'var(--radius-md)', objectFit:'contain' }}
+            onClick={e => e.stopPropagation()}
+          />
+          <div style={{ display:'flex', gap:12, marginTop:16 }} onClick={e => e.stopPropagation()}>
+            <button className="btn btn-ghost btn-sm" style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none' }}
+              onClick={() => handleDownload(lightboxUrl)}>
+              <Download size={16} /> {t('download')}
+            </button>
+            <button className="btn btn-ghost btn-sm" style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none' }}
+              onClick={() => handleShare(lightboxUrl)}>
+              <Share2 size={16} /> {t('share')}
+            </button>
+            <button className="btn btn-ghost btn-sm" style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none' }}
+              onClick={() => setLightboxUrl(null)}>
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
