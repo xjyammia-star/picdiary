@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { initDb } from './_db'
+import { initDb } from './lib/db'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Simple auth check - only allow if secret matches

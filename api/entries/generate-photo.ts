@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getDb } from '../_db'
-import { extractToken, verifyToken } from '../_auth'
-import { uploadBase64Image } from '../_cloudinary'
-import { generateImageFromPhoto, buildPhotoPrompt } from '../_ai'
+import { getDb } from '../lib/db'
+import { extractToken, verifyToken } from '../lib/auth'
+import { uploadBase64Image } from '../lib/cloudinary'
+import { generateImageFromPhoto, buildPhotoPrompt } from '../lib/ai'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })

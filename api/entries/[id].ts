@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getDb } from '../../_db'
-import { extractToken, verifyToken } from '../../_auth'
-import { deleteImage } from '../../_cloudinary'
+import { getDb } from '../../lib/db'
+import { extractToken, verifyToken } from '../../lib/auth'
+import { deleteImage } from '../../lib/cloudinary'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = extractToken(req as any)
