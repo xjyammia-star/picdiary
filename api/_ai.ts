@@ -130,7 +130,7 @@ export async function generateDiaryText(
   keywords?: string
 ): Promise<string> {
   const apiKey = process.env.DOUBAO_API_KEY!
-  const model = process.env.DOUBAO_MODEL || 'doubao-seed-2-0-lite-32k'
+  const model = process.env.DOUBAO_MODEL || 'doubao-seed-2-0-lite-260428'
 
   const imagesDesc = imageDescriptions.map((d, i) => `第${i + 1}张图：${d}`).join('\n')
   const keywordHint = keywords ? `\n用户关键词：${keywords}` : ''
