@@ -162,12 +162,11 @@ export default function DayPage() {
             </button>
           </div>
         ) : (
-          <>
-            <div className="entries-grid" style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 12
-            }}>
+          <div className="entries-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: 12
+          }}>
             {entries.map(entry => (
               <div key={entry.id}>
                 <div
