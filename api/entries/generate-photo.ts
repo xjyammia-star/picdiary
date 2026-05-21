@@ -6,17 +6,17 @@ import { v2 as cloudinary } from 'cloudinary'
 type ImageStyle = 'cartoon' | 'anime' | 'pixel' | 'sketch' | 'watercolor' | 'custom'
 
 const STYLE_PROMPTS: Record<ImageStyle, string> = {
-  cartoon: 'in a vibrant cartoon illustration style, bold outlines, bright colors, playful and expressive',
-  anime: 'in Japanese anime style, clean linework, soft shading, expressive eyes, cel-shaded',
-  pixel: 'in pixel art style, 16-bit retro game aesthetic, chunky pixels, limited color palette',
-  sketch: 'in pencil sketch style, hand-drawn linework, cross-hatching, monochrome with subtle tones',
-  watercolor: 'in soft watercolor painting style, translucent washes, gentle bleeding edges, dreamy atmosphere',
+  cartoon: 'in a detailed cartoon illustration style with semi-realistic proportions, clean linework, vibrant but natural colors, preserving facial features and scene atmosphere',
+  anime: 'in a high-quality Japanese anime illustration style, detailed linework, natural shading, realistic proportions, preserving the original scene mood and background details',
+  pixel: 'in pixel art style, 16-bit retro aesthetic, preserving the key composition and recognizable details of the original scene',
+  sketch: 'as a detailed pencil sketch illustration, fine linework, cross-hatching for depth, preserving composition and key details',
+  watercolor: 'as a detailed watercolor illustration, soft washes with precise linework, preserving the original scene composition and atmosphere',
   custom: '',
 }
 
 function buildPhotoPrompt(style: ImageStyle, customStyle?: string) {
   const styleDesc = style === 'custom' && customStyle ? customStyle : STYLE_PROMPTS[style]
-  return `Transform this photo into an artistic illustration ${styleDesc}. Preserve the original composition, subjects, background, and key details. No text or watermarks.`
+  return `Convert this photo into an artistic illustration ${styleDesc}. Faithfully preserve: the exact composition and camera angle, all background details including any text/signs/banners, the subject's clothing colors and physical features, lighting conditions, and overall scene atmosphere. Maintain the original aspect ratio. High quality, detailed artwork. Do not add or remove elements from the scene.`
 }
 
 async function verifyToken(token: string) {
