@@ -281,8 +281,13 @@ export default function HomePage() {
 
             {style === 'custom' && (
               <div style={{ padding:'8px 14px 0' }}>
+                <div style={{ fontSize:'0.72rem', color:'var(--accent)', marginBottom:4, display:'flex', alignItems:'center', gap:4 }}>
+                  <span>✦</span>
+                  <span>{lang==='zh' ? '请先输入自定义风格，再点击开始创作' : 'Enter your custom style below, then tap Create'}</span>
+                </div>
                 <input className="input" placeholder={t('custom_style_placeholder')}
-                  value={customStyle} onChange={e => setCustomStyle(e.target.value)} />
+                  value={customStyle} onChange={e => setCustomStyle(e.target.value)}
+                  autoFocus />
               </div>
             )}
 
@@ -334,7 +339,10 @@ export default function HomePage() {
                 {lang==='zh'?'管理 →':'Manage →'}
               </button>
             </div>
-            <div style={{ display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none', paddingBottom:4 }}>
+            <div
+              style={{ display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none', paddingBottom:4, cursor:'grab' }}
+              onWheel={e => { e.currentTarget.scrollLeft += e.deltaY; e.preventDefault() }}
+            >
               {todayEntries.map(entry => (
                 <div key={entry.id}
                   onClick={() => setLightbox(entry)}
