@@ -172,7 +172,7 @@ export default function HomePage() {
                 placeholder={t('input_placeholder')}
                 value={text}
                 onChange={e => setText(e.target.value)}
-                rows={photoFile ? 2 : 3}
+                rows={photoFile ? 3 : 5}
                 maxLength={200}
                 style={{ background:'transparent', border:'none', padding:0, fontSize:'1rem', resize:'none', width:'100%' }}
               />
@@ -181,12 +181,19 @@ export default function HomePage() {
               <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:8, paddingTop:8, borderTop:'1px solid var(--border)' }}>
                 {/* Upload photo */}
                 <button
-                  className="btn-icon"
                   onClick={() => fileInputRef.current?.click()}
-                  style={{ color: photoFile ? 'var(--accent)' : 'var(--text-muted)', flexShrink:0 }}
-                  title={t('upload_photo')}
+                  style={{
+                    flexShrink:0, display:'flex', alignItems:'center', gap:5,
+                    padding:'6px 12px', borderRadius:20,
+                    border: `1.5px solid ${photoFile ? 'var(--accent)' : 'var(--border)'}`,
+                    background: photoFile ? 'var(--accent-light)' : 'transparent',
+                    color: photoFile ? 'var(--accent-dark)' : 'var(--text-secondary)',
+                    fontSize:'0.78rem', fontWeight:500, cursor:'pointer', whiteSpace:'nowrap',
+                    fontFamily:'var(--font-sans)',
+                  }}
                 >
-                  <Camera size={20} />
+                  <Camera size={15} />
+                  {photoFile ? (lang === 'zh' ? '已选图' : 'Photo') : (lang === 'zh' ? '上传照片' : 'Photo')}
                 </button>
                 <input ref={fileInputRef} type="file" accept="image/*" style={{ display:'none' }}
                   onChange={async e => {
@@ -199,7 +206,7 @@ export default function HomePage() {
                 />
 
                 {/* Style pills - horizontal scroll */}
-                <div style={{ flex:1, overflowX:'auto', display:'flex', gap:6, scrollbarWidth:'none' }}>
+                <div style={{ flex:1, overflowX:'auto', display:'flex', gap:6, scrollbarWidth:'none', WebkitOverflowScrolling:'touch', maskImage:'linear-gradient(to right, black 80%, transparent 100%)' }}>
                   {IMAGE_STYLES.map(s => (
                     <button
                       key={s.value}
@@ -223,13 +230,13 @@ export default function HomePage() {
                   className="btn btn-primary"
                   onClick={handleGenerate}
                   disabled={!canGenerate || generating}
-                  style={{ flexShrink:0, padding:'8px 16px', borderRadius:'var(--radius-md)', gap:6 }}
+                  style={{ flexShrink:0, padding:'8px 18px', borderRadius:20, gap:6, fontSize:'0.88rem' }}
                 >
                   {generating
-                    ? <span className="spinner" style={{ width:16, height:16, borderTopColor:'white', borderColor:'rgba(255,255,255,0.3)' }} />
-                    : <Sparkles size={16} />
+                    ? <span className="spinner" style={{ width:15, height:15, borderTopColor:'white', borderColor:'rgba(255,255,255,0.3)' }} />
+                    : <Sparkles size={15} />
                   }
-                  {generating ? '' : t('generate')}
+                  <span>{generating ? (lang === 'zh' ? '生成中' : '...') : t('generate')}</span>
                 </button>
               </div>
 
