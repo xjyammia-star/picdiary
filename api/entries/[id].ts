@@ -52,6 +52,30 @@ async function getGoogleAccessToken(): Promise<string> {
 }
 
 const STYLE_PROMPTS: Record<ImageStyle, string> = {
+  cartoon: 'vibrant cartoon illustration style with bold outlines, cel-shading, and saturated colors (like Pixar or Disney animation)',
+  anime: 'Japanese anime illustration style with clean ink lines, cel-shaded coloring, expressive characters, and painterly backgrounds (like Studio Ghibli or Makoto Shinkai)',
+  pixel: 'retro 16-bit pixel art style with a limited color palette, chunky pixels, hard edges, and no anti-aliasing (like a classic SNES video game)',
+  sketch: 'hand-drawn pencil sketch style with expressive line weights, cross-hatching for shadows, and monochrome graphite tones on white paper',
+  watercolor: 'loose watercolor painting style with translucent color washes, soft bleeding edges, visible paper texture, and impressionist brushwork',
+  custom: '',
+}
+
+function buildPhotoPrompt(style: ImageStyle, customStyle?: string) {
+  const styleDesc = style === 'custom' && customStyle ? customStyle : STYLE_PROMPTS[style]
+  return 'Redraw this entire photo as a ' + styleDesc + '. CRITICAL RULES: (1) Every single element in the original photo must appear in the output at the same position — people, objects, background, signs, text, banners, birds, trees, buildings, everything. Do NOT remove, erase or omit any element. (2) All text, logos, signs and banners must remain legible and in the same location, rendered in the chosen art style. (3) The entire image — foreground, background, every detail — must be fully redrawn in the chosen art style. Nothing should look photorealistic. (4) Maintain the original composition, framing and aspect ratio exactly.'
+}
+
+async function getGoogleAccessToken(): Promise<string> {
+  const keyBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_KEY!
+  const keyJson = JSON.parse(Buffer.from(keyBase64, 'base64').toString('utf-8'))
+  const { GoogleAuth } = await import('google-auth-library')
+  const auth = new GoogleAuth({ credentials: keyJson, scopes: ['https://www.googleapis.com/auth/cloud-platform'] })
+  const client = await auth.getClient()
+  const tokenResponse = await client.getAccessToken()
+  return tokenResponse.token!
+}
+
+const STYLE_PROMPTS: Record<ImageStyle, string> = {
   cartoon: 'in a detailed cartoon illustration style with semi-realistic proportions, clean linework, vibrant but natural colors, preserving facial features and scene atmosphere',
   anime: 'in a high-quality Japanese anime illustration style, detailed linework, natural shading, realistic proportions, preserving the original scene mood and background details',
   pixel: 'in pixel art style, 16-bit retro aesthetic, preserving the key composition and recognizable details of the original scene',
