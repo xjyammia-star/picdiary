@@ -73,9 +73,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     )
 
     const projectId = process.env.GOOGLE_PROJECT_ID!
-    const location = process.env.GOOGLE_LOCATION || 'us-central1'
     const accessToken = await getGoogleAccessToken()
-    const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-2.5-flash-image:generateContent`
+    // Gemini 2.5+ models require 'global' location on Vertex AI
+    const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-2.5-flash-image:generateContent`
     const prompt = buildPhotoPrompt(style, customStyle)
 
     const aiRes = await fetch(endpoint, {
@@ -83,16 +83,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mimeType || 'image/jpeg', data: photoBase64 } }, { text: prompt }] }],
-        generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
+        generationConfig: { responseModalities: ['IMAGE'] },
       }),
     })
     if (!aiRes.ok) throw new Error(`Gemini error: ${await aiRes.text()}`)
     const data = await aiRes.json()
     const parts = data.candidates?.[0]?.content?.parts || []
-    const imagePart = parts.find((p: any) => p.inline_data?.mime_type?.startsWith('image/'))
+    // Handle both camelCase and snake_case response formats
+    const imagePart = parts.find((p: any) => 
+      p.inlineData?.mimeType?.startsWith('image/') || 
+      p.inline_data?.mime_type?.startsWith('image/')
+    )
     if (!imagePart) throw new Error('No image from Gemini')
+    const imageData = imagePart.inlineData?.data || imagePart.inline_data?.data
 
-    const generatedUrl = await uploadBase64Image(imagePart.inline_data.data, `picdiary/${userId}`)
+    const generatedUrl = await uploadBase64Image(imageData, `picdiary/${userId}`)
     const sql = neon(process.env.DATABASE_URL!)
     const [entry] = await sql`
       INSERT INTO diary_entries (user_id, date, input_type, input_photo_url, style, custom_style, generated_image_url, aspect_ratio)

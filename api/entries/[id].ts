@@ -91,21 +91,21 @@ async function generateImageFromPhoto(photoBase64: string, mimeType: string, pro
   const projectId = process.env.GOOGLE_PROJECT_ID!
   const location = process.env.GOOGLE_LOCATION || 'us-central1'
   const accessToken = await getGoogleAccessToken()
-  const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-2.5-flash-image:generateContent`
+  const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-2.5-flash-image:generateContent`
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mimeType, data: photoBase64 } }, { text: prompt }] }],
-      generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
+      generationConfig: { responseModalities: ['IMAGE'] },
     }),
   })
   if (!res.ok) throw new Error(`Gemini error: ${await res.text()}`)
   const data = await res.json()
   const parts = data.candidates?.[0]?.content?.parts || []
-  const imagePart = parts.find((p: any) => p.inline_data?.mime_type?.startsWith('image/'))
+  const imagePart = parts.find((p: any) => p.inlineData?.mimeType?.startsWith('image/') || p.inline_data?.mime_type?.startsWith('image/'))
   if (!imagePart) throw new Error('No image from Gemini')
-  return imagePart.inline_data.data
+  return imagePart.inlineData?.data || imagePart.inline_data?.data
 }
 
 // ── handler ─────────────────────────────────────────────────────
