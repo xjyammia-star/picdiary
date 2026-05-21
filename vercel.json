@@ -8,6 +8,9 @@
   "functions": {
     "api/**/*.ts": {
       "maxDuration": 30
+    },
+    "api/diary/index.ts": {
+      "maxDuration": 60
     }
   }
 }

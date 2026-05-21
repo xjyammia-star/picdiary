@@ -13,33 +13,6 @@ function extractToken(req: VercelRequest): string | null {
   return auth.startsWith('Bearer ') ? auth.slice(7) : null
 }
 
-// Describe image content using Doubao multimodal
-async function describeImageWithDoubao(imageUrl: string, apiKey: string, model: string): Promise<string> {
-  try {
-    const res = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: imageUrl } },
-            { type: 'text', text: '请用简洁的中文描述这张图片的具体内容：包括图中有什么人（外貌、表情、动作）、在什么场景（地点、环境特征）、有什么具体物品（要准确，比如奖杯就说奖杯，不要说成奖牌）、正在发生什么事情。只描述看到的内容，100字以内。' }
-          ]
-        }],
-        max_tokens: 200,
-        temperature: 0.1,
-      }),
-    })
-    if (!res.ok) return '（图片内容无法解析）'
-    const data = await res.json()
-    return data.choices?.[0]?.message?.content || '（图片内容无法解析）'
-  } catch {
-    return '（图片内容无法解析）'
-  }
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const token = extractToken(req)
   if (!token) return res.status(401).json({ error: 'Unauthorized' })
@@ -62,8 +35,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { date, keywords } = req.body || {}
     if (!date) return res.status(400).json({ error: 'date required' })
 
+    // Fetch entries with pre-analyzed descriptions
     const entries = await sql`
-      SELECT input_text, input_type, generated_image_url, input_photo_url, style
+      SELECT input_text, input_type, image_description
       FROM diary_entries
       WHERE user_id = ${userId} AND date = ${date}
       ORDER BY created_at ASC
@@ -74,24 +48,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let profile: any = null
     try { const rows = await sql`SELECT * FROM user_profiles WHERE user_id = ${userId}`; profile = rows[0] || null } catch {}
 
-    const apiKey = process.env.DOUBAO_API_KEY!
-    const model = process.env.DOUBAO_MODEL || 'doubao-seed-2-0-lite-260428'
-
     try {
-      // Step 1: Use Doubao to describe each image
-      const descriptionPromises = entries.map(async (e: any, i: number) => {
-        // Use original photo if available, otherwise use generated image
-        const imageUrl = e.input_photo_url || e.generated_image_url
-        const aiDesc = await describeImageWithDoubao(imageUrl, apiKey, model)
+      // Build content descriptions from stored analysis
+      const descriptions = entries.map((e: any, i: number) => {
+        const desc = e.image_description || ''
         if (e.input_type === 'text' && e.input_text) {
-          return `【第${i+1}个记录】用户备注："${e.input_text}" | 图片内容：${aiDesc}`
+          return desc
+            ? `【第${i+1}个记录】用户备注："${e.input_text}" | 图片内容：${desc}`
+            : `【第${i+1}个记录】用户备注："${e.input_text}"`
         }
-        return `【第${i+1}个记录】图片内容：${aiDesc}`
+        return desc
+          ? `【第${i+1}个记录】图片内容：${desc}`
+          : `【第${i+1}个记录】（照片）`
       })
-      const descriptions = await Promise.all(descriptionPromises)
       const imagesDesc = descriptions.join('\n')
 
-      // Step 2: Build profile context
+      // Build profile context
       const currentYear = new Date().getFullYear()
       const profileParts: string[] = []
       if (profile?.nickname) profileParts.push(`叫${profile.nickname}`)
@@ -112,12 +84,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 1. 以第一人称"我"叙述，语气自然真诚，像真人在写日记
 2. 要有完整的叙事弧：交代发生了什么 → 具体细节和感受 → 情感收尾或感悟
 3. 把多个经历自然串联成一个故事，不要分条罗列
-4. 细节要忠实于图片真实内容（图里是奖杯就写奖杯，不能写成奖牌；图里有几个人就是几个人）
+4. 细节要忠实于图片真实内容（图里是奖杯就写奖杯，不能写成奖牌）
 5. 字数150-250字，不写日期和标题，直接写正文${profileHint}`
 
       const userPrompt = `今天的经历：\n${imagesDesc}${keywordHint}\n\n请根据以上内容写一篇今天的日记。`
 
-      // Step 3: Generate diary
+      const apiKey = process.env.DOUBAO_API_KEY!
+      const model = process.env.DOUBAO_MODEL || 'doubao-seed-2-0-lite-260428'
+
       const doubaoRes = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },

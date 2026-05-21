@@ -28,6 +28,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`
     await sql`CREATE INDEX IF NOT EXISTS idx_entries_user_date ON diary_entries(user_id, date)`
+    // Add image_description column if not exists (safe to run multiple times)
+    await sql`ALTER TABLE diary_entries ADD COLUMN IF NOT EXISTS image_description TEXT`
     await sql`CREATE TABLE IF NOT EXISTS diary_notes (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

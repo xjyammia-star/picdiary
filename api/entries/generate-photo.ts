@@ -51,6 +51,28 @@ async function uploadBase64Image(base64Data: string, folder: string): Promise<st
   return result.secure_url
 }
 
+async function describeImage(imageUrl: string): Promise<string> {
+  const apiKey = process.env.DOUBAO_API_KEY!
+  const model = process.env.DOUBAO_MODEL || 'doubao-seed-2-0-lite-260428'
+  try {
+    const res = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: [
+          { type: 'image_url', image_url: { url: imageUrl } },
+          { type: 'text', text: '请用简洁的中文描述这张图片的具体内容：包括图中有什么人（外貌、表情、动作）、在什么场景（地点、环境）、有什么具体物品（要准确，比如奖杯就说奖杯）、正在发生什么。只描述看到的内容，100字以内。' }
+        ]}],
+        max_tokens: 200, temperature: 0.1,
+      }),
+    })
+    if (!res.ok) return ''
+    const data = await res.json()
+    return data.choices?.[0]?.message?.content?.trim() || ''
+  } catch { return '' }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
@@ -104,6 +126,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       VALUES (${userId}, ${date}, 'photo', ${originalUrl}, ${style}, ${customStyle || null}, ${generatedUrl}, ${ratio})
       RETURNING *
     `
+    // Analyze original photo for diary context (use original for accurate content)
+    describeImage(originalUrl).then(async (desc) => {
+      if (desc) {
+        const sql2 = neon(process.env.DATABASE_URL!)
+        await sql2`UPDATE diary_entries SET image_description = ${desc} WHERE id = ${entry.id}`.catch(() => {})
+      }
+    })
     return res.status(201).json(entry)
   } catch (err: any) {
     console.error('Generate photo error:', err)
