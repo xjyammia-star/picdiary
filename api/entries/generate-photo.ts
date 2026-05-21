@@ -75,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const projectId = process.env.GOOGLE_PROJECT_ID!
     const accessToken = await getGoogleAccessToken()
     // Gemini 2.5+ models require 'global' location on Vertex AI
-    const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-2.5-flash-image:generateContent`
+    const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`
     const prompt = buildPhotoPrompt(style, customStyle)
 
     const aiRes = await fetch(endpoint, {
