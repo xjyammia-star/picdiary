@@ -56,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const model = process.env.DOUBAO_MODEL || 'doubao-seed-2-0-lite-260428'
       const imagesDesc = descriptions.map((d: string, i: number) => `第${i + 1}张图：${d}`).join('\n')
       const keywordHint = keywords ? `\n用户关键词：${keywords}` : ''
-      const userPrompt = `今天我创作了这些图片：\n${imagesDesc}${keywordHint}\n\n请帮我写一篇今天的日记。`
+      const userPrompt = `今天的经历素材：\n${imagesDesc}${keywordHint}\n\n请根据这些素材，帮我写一篇有故事性和逻辑连贯性的今日日记，把这些片段自然地串联成一个完整的故事。`
 
       const doubaoRes = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
         method: 'POST',
@@ -67,7 +67,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             { role: 'system', content: '你是一个温暖有文采的日记写手，善于用优美的语言记录生活点滴。根据用户当天的图片内容，写一篇100-200字的日记片段，要有情感，有画面感，像真实的日记一样自然。不要写日期，不要写标题，直接写正文。' },
             { role: 'user', content: userPrompt },
           ],
-          max_tokens: 400,
+          max_tokens: 600,
           temperature: 0.8,
         }),
       })
