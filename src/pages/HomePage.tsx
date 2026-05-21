@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, LogOut, Globe } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useLang } from '../i18n/LangContext'
+import { translations } from '../i18n/translations'
 import { getCalendarMonth } from '../services/api'
 import CreateSheet from '../components/diary/CreateSheet'
 import type { CalendarDay } from '../types'
@@ -92,14 +93,14 @@ export default function HomePage() {
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 16px 8px' }}>
             <button className="btn-icon" onClick={prevMonth}><ChevronLeft size={18} /></button>
             <div style={{ fontFamily:'var(--font-serif)', fontSize:'1.05rem', fontWeight:500 }}>
-              {t('months')[month-1]} {year}
+              {translations[lang].months[month-1]} {year}
             </div>
             <button className="btn-icon" onClick={nextMonth}><ChevronRight size={18} /></button>
           </div>
 
           {/* Weekday headers */}
           <div className="calendar-grid" style={{ gap: '2px 4px' }}>
-            {t('weekdays').split(',').map((wd: string, i: number) => (
+            {translations[lang].weekdays.map((wd: string, i: number) => (
               <div key={i} className="calendar-weekday">{wd}</div>
             ))}
             {cells.map((cell) => {
