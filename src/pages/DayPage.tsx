@@ -142,7 +142,7 @@ export default function DayPage() {
   )
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" style={{ maxWidth: '100%' }}>
       {/* Header */}
       <header className="app-header">
         <button className="btn-icon" onClick={() => navigate(-1)}><ArrowLeft size={20} /></button>
@@ -163,16 +163,10 @@ export default function DayPage() {
           </div>
         ) : (
           <>
-            <style>{`
-              @media (min-width: 640px) {
-                .entries-grid { grid-template-columns: repeat(4, 1fr) !important; }
-                .entry-action-label { display: inline !important; }
-              }
-            `}</style>
             <div className="entries-grid" style={{
               display: 'grid',
-              gridTemplateColumns: '1fr',
-              gap: 16
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: 12
             }}>
             {entries.map(entry => (
               <div key={entry.id}>
@@ -198,16 +192,16 @@ export default function DayPage() {
                 </div>
                 <div className="entry-actions" style={{ marginTop:8, flexWrap:'wrap' }}>
                   <button className="entry-action-btn" onClick={() => handleDownload(entry.generated_image_url)} title={t('download')}>
-                    <Download size={14} /> <span className="entry-action-label" style={{ display:'none' }}>{t('download')}</span>
+                    <Download size={14} />
                   </button>
                   <button className="entry-action-btn" onClick={() => handleCopyImage(entry.generated_image_url)} title={t('copy')}>
-                    <Copy size={14} /> <span className="entry-action-label" style={{ display:'none' }}>{t('copy')}</span>
+                    <Copy size={14} />
                   </button>
                   <button className="entry-action-btn" onClick={() => handleShare(entry.generated_image_url)} title={t('share')}>
-                    <Share2 size={14} /> <span className="entry-action-label" style={{ display:'none' }}>{t('share')}</span>
+                    <Share2 size={14} />
                   </button>
                   <button className="entry-action-btn" onClick={() => handleRegenerate(entry)} title={t('regenerate')} disabled={!!processingId}>
-                    <RefreshCw size={14} /> <span className="entry-action-label" style={{ display:'none' }}>{t('regenerate')}</span>
+                    <RefreshCw size={14} />
                   </button>
                   <button className="entry-action-btn danger" onClick={() => handleDelete(entry.id, 'entry')} title={t('delete')}>
                     <Trash2 size={14} />
@@ -221,7 +215,6 @@ export default function DayPage() {
               </div>
             ))}
           </div>
-          </>
         )}
 
         {/* Diary note section */}
