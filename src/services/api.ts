@@ -83,7 +83,7 @@ export async function generateDiaryNote(params: {
   date: string
   keywords?: string
 }): Promise<DiaryNote> {
-  const res = await fetch('/api/diary/generate', {
+  const res = await fetch('/api/diary', {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify(params),
