@@ -37,6 +37,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(user_id, date)
     )`
+    await sql`CREATE TABLE IF NOT EXISTS user_profiles (
+      user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      nickname TEXT,
+      gender TEXT,
+      birth_year INT,
+      personality TEXT,
+      self_description TEXT,
+      interests TEXT,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    )`
     return res.json({ success: true, message: 'Database initialized' })
   } catch (err: any) {
     return res.status(500).json({ error: err.message })

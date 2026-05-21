@@ -106,3 +106,28 @@ export async function deleteDiaryNote(noteId: string): Promise<void> {
   })
   return handleResponse(res)
 }
+
+// ─── Profile ─────────────────────────────────────────────────────────────────
+
+export interface UserProfile {
+  nickname?: string
+  gender?: string
+  birth_year?: number
+  personality?: string
+  self_description?: string
+  interests?: string
+}
+
+export async function getProfile(): Promise<UserProfile> {
+  const res = await fetch('/api/profile', { headers: authHeaders() })
+  return handleResponse(res)
+}
+
+export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
+  const res = await fetch('/api/profile', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(profile),
+  })
+  return handleResponse(res)
+}

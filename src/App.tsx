@@ -4,6 +4,7 @@ import { LangProvider } from './i18n/LangContext'
 import AuthPage from './pages/AuthPage'
 import HomePage from './pages/HomePage'
 import DayPage from './pages/DayPage'
+import ProfilePage from './pages/ProfilePage'
 import './index.css'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -20,6 +21,7 @@ function AppRoutes() {
       <Route path="/auth" element={user ? <Navigate to="/" replace /> : <AuthPage />} />
       <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
       <Route path="/day/:date" element={<ProtectedRoute><DayPage /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

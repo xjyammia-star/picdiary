@@ -42,6 +42,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     `
     if (entries.length === 0) return res.status(400).json({ error: 'No entries for this date' })
 
+    // Fetch user profile
+    let profile: any = null
+    try { const rows = await sql`SELECT * FROM user_profiles WHERE user_id = ${userId}`; profile = rows[0] || null } catch {}
+
     const descriptions = entries.map((e: any) => {
       if (e.input_type === 'text') return `文字描述：${e.input_text}，风格：${e.style}`
       return `照片，风格化为：${e.style}`
