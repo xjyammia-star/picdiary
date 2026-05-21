@@ -1,15 +1,19 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { neon } from '@neondatabase/serverless'
+import { SignJWT, jwtVerify } from 'jose'
 import bcrypt from 'bcryptjs'
-import { getDb } from '../lib/db'
-import { signToken } from '../lib/auth'
+
+async function signToken(payload: { userId: string; email: string }) {
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+  return new SignJWT(payload).setProtectedHeader({ alg: 'HS256' }).setExpirationTime('30d').sign(secret)
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-
   const { email, password } = req.body || {}
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' })
 
-  const sql = getDb()
+  const sql = neon(process.env.DATABASE_URL!)
   const [user] = await sql`SELECT * FROM users WHERE email = ${email.toLowerCase()}`
   if (!user) return res.status(401).json({ error: 'invalid_credentials' })
 
