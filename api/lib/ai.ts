@@ -1,4 +1,4 @@
-import type { ImageStyle } from '../src/types'
+type ImageStyle = 'cartoon' | 'anime' | 'pixel' | 'sketch' | 'watercolor' | 'custom'
 
 // ─── Style prompt builders ───────────────────────────────────────────────────
 

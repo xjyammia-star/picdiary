@@ -46,7 +46,7 @@ export async function generateFromPhoto(params: {
 }
 
 export async function regenerateEntry(entryId: string): Promise<DiaryEntry> {
-  const res = await fetch(`/api/entries/${entryId}/regenerate`, {
+  const res = await fetch(`/api/entries/${entryId}`, {
     method: 'POST',
     headers: authHeaders(),
   })
