@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { neon } from '@neondatabase/serverless'
-import { SignJWT, jwtVerify } from 'jose'
+import { SignJWT } from 'jose'
 import bcrypt from 'bcryptjs'
 
 async function signToken(payload: { userId: string; email: string }) {
