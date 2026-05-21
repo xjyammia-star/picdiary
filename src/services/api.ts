@@ -1,0 +1,108 @@
+import type { DiaryEntry, DiaryNote, CalendarDay, ImageStyle } from '../types'
+
+const getToken = () => localStorage.getItem('picdiary_token')
+
+const authHeaders = () => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${getToken()}`,
+})
+
+async function handleResponse<T>(res: Response): Promise<T> {
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Request failed')
+  return data
+}
+
+// ─── Entries ────────────────────────────────────────────────────────────────
+
+export async function generateFromText(params: {
+  text: string
+  style: ImageStyle
+  customStyle?: string
+  date: string
+}): Promise<DiaryEntry> {
+  const res = await fetch('/api/entries/generate-text', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(params),
+  })
+  return handleResponse(res)
+}
+
+export async function generateFromPhoto(params: {
+  photoBase64: string
+  mimeType: string
+  style: ImageStyle
+  customStyle?: string
+  date: string
+  aspectRatio: string
+}): Promise<DiaryEntry> {
+  const res = await fetch('/api/entries/generate-photo', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(params),
+  })
+  return handleResponse(res)
+}
+
+export async function regenerateEntry(entryId: string): Promise<DiaryEntry> {
+  const res = await fetch(`/api/entries/${entryId}/regenerate`, {
+    method: 'POST',
+    headers: authHeaders(),
+  })
+  return handleResponse(res)
+}
+
+export async function deleteEntry(entryId: string): Promise<void> {
+  const res = await fetch(`/api/entries/${entryId}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  })
+  return handleResponse(res)
+}
+
+export async function getEntriesByDate(date: string): Promise<DiaryEntry[]> {
+  const res = await fetch(`/api/entries?date=${date}`, {
+    headers: authHeaders(),
+  })
+  return handleResponse(res)
+}
+
+// ─── Calendar ───────────────────────────────────────────────────────────────
+
+export async function getCalendarMonth(year: number, month: number): Promise<CalendarDay[]> {
+  const res = await fetch(`/api/calendar?year=${year}&month=${month}`, {
+    headers: authHeaders(),
+  })
+  return handleResponse(res)
+}
+
+// ─── Diary Notes ─────────────────────────────────────────────────────────────
+
+export async function generateDiaryNote(params: {
+  date: string
+  keywords?: string
+}): Promise<DiaryNote> {
+  const res = await fetch('/api/diary/generate', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(params),
+  })
+  return handleResponse(res)
+}
+
+export async function getDiaryNote(date: string): Promise<DiaryNote | null> {
+  const res = await fetch(`/api/diary?date=${date}`, {
+    headers: authHeaders(),
+  })
+  if (res.status === 404) return null
+  return handleResponse(res)
+}
+
+export async function deleteDiaryNote(noteId: string): Promise<void> {
+  const res = await fetch(`/api/diary/${noteId}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  })
+  return handleResponse(res)
+}
