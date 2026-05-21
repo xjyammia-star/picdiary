@@ -162,11 +162,18 @@ export default function DayPage() {
             </button>
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: entries.length === 1 ? '1fr' : 'repeat(2, 1fr)',
-            gap: 12
-          }}>
+          <>
+            <style>{`
+              @media (min-width: 640px) {
+                .entries-grid { grid-template-columns: repeat(4, 1fr) !important; }
+                .entry-action-label { display: inline !important; }
+              }
+            `}</style>
+            <div className="entries-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr',
+              gap: 16
+            }}>
             {entries.map(entry => (
               <div key={entry.id}>
                 <div
@@ -191,16 +198,16 @@ export default function DayPage() {
                 </div>
                 <div className="entry-actions" style={{ marginTop:8, flexWrap:'wrap' }}>
                   <button className="entry-action-btn" onClick={() => handleDownload(entry.generated_image_url)} title={t('download')}>
-                    <Download size={14} /> {entries.length === 1 ? t('download') : ''}
+                    <Download size={14} /> <span className="entry-action-label" style={{ display:'none' }}>{t('download')}</span>
                   </button>
                   <button className="entry-action-btn" onClick={() => handleCopyImage(entry.generated_image_url)} title={t('copy')}>
-                    <Copy size={14} /> {entries.length === 1 ? t('copy') : ''}
+                    <Copy size={14} /> <span className="entry-action-label" style={{ display:'none' }}>{t('copy')}</span>
                   </button>
                   <button className="entry-action-btn" onClick={() => handleShare(entry.generated_image_url)} title={t('share')}>
-                    <Share2 size={14} /> {entries.length === 1 ? t('share') : ''}
+                    <Share2 size={14} /> <span className="entry-action-label" style={{ display:'none' }}>{t('share')}</span>
                   </button>
                   <button className="entry-action-btn" onClick={() => handleRegenerate(entry)} title={t('regenerate')} disabled={!!processingId}>
-                    <RefreshCw size={14} /> {entries.length === 1 ? t('regenerate') : ''}
+                    <RefreshCw size={14} /> <span className="entry-action-label" style={{ display:'none' }}>{t('regenerate')}</span>
                   </button>
                   <button className="entry-action-btn danger" onClick={() => handleDelete(entry.id, 'entry')} title={t('delete')}>
                     <Trash2 size={14} />
@@ -214,6 +221,7 @@ export default function DayPage() {
               </div>
             ))}
           </div>
+          </>
         )}
 
         {/* Diary note section */}
