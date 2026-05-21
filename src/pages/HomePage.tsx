@@ -153,13 +153,15 @@ export default function HomePage() {
 
             {/* Photo preview */}
             {photoPreview && (
-              <div style={{ position:'relative', borderRadius:'var(--radius-xl) var(--radius-xl) 0 0', overflow:'hidden' }}>
-                <img src={photoPreview} alt="" style={{ width:'100%', maxHeight:180, objectFit:'cover', display:'block' }} />
+              <div style={{ position:'relative', borderRadius:'var(--radius-xl) var(--radius-xl) 0 0',
+                overflow:'hidden', background:'var(--surface)', maxHeight:140,
+                display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <img src={photoPreview} alt="" style={{ maxWidth:'100%', maxHeight:140, objectFit:'contain', display:'block' }} />
                 <button onClick={() => { setPhotoFile(null); setPhotoPreview('') }}
-                  style={{ position:'absolute', top:8, right:8, width:28, height:28, borderRadius:'50%',
+                  style={{ position:'absolute', top:6, right:6, width:26, height:26, borderRadius:'50%',
                     background:'rgba(0,0,0,0.5)', border:'none', color:'white', cursor:'pointer',
                     display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <X size={14} />
+                  <X size={13} />
                 </button>
               </div>
             )}
