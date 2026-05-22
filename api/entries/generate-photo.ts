@@ -17,6 +17,11 @@ const STYLE_PROMPTS: Record<ImageStyle, string> = {
   custom: "",
 }
 
+function buildPhotoPrompt(style: ImageStyle, customStyle?: string): string {
+  const styleDesc = style === 'custom' && customStyle ? customStyle : STYLE_PROMPTS[style]
+  return 'Redraw this entire photo as a ' + styleDesc + '. CRITICAL RULES: (1) Every single element in the original photo must appear in the output at the same position — people, objects, background, signs, text, banners, birds, trees, buildings, everything. Do NOT remove, erase or omit any element. (2) All text, logos, signs and banners must remain legible and in the same location, rendered in the chosen art style. (3) The entire image — foreground, background, every detail — must be fully redrawn in the chosen art style. Nothing should look photorealistic. (4) Maintain the original composition, framing and aspect ratio exactly.'
+}
+
 async function verifyToken(token: string) {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
   const { payload } = await jwtVerify(token, secret)
@@ -49,66 +54,6 @@ async function uploadBase64Image(base64Data: string, folder: string): Promise<st
   return result.secure_url
 }
 
-// Step 1: Use Gemini 2.0 Flash (multimodal, very cheap) to describe the photo in detail
-async function analyzePhoto(photoBase64: string, mimeType: string, accessToken: string, projectId: string): Promise<string> {
-  const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-2.5-flash-lite:generateContent`
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{
-        role: 'user',
-        parts: [
-          { inline_data: { mime_type: mimeType, data: photoBase64 } },
-          { text: 'Describe this photo in rich detail for use as an image generation prompt. Include: (1) All people - their age, appearance, clothing, expressions, poses, exact position in frame. (2) The exact scene - location, environment, background elements, any text/signs/banners with their exact wording. (3) All objects - describe each one specifically and accurately. (4) Lighting, time of day, atmosphere. (5) Overall composition and framing. Be specific and accurate - if there is a trophy describe it as a trophy not a medal. Output only the description, no commentary.' }
-        ]
-      }],
-      generationConfig: { maxOutputTokens: 400, temperature: 0.1 }
-    }),
-  })
-  if (!res.ok) throw new Error(`Photo analysis failed: ${await res.text()}`)
-  const data = await res.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-}
-
-// Step 2: Use Imagen 4 to generate stylized image from description
-async function generateStylizedImage(description: string, style: ImageStyle, customStyle: string | undefined, aspectRatio: string, accessToken: string, projectId: string): Promise<string> {
-  const styleDesc = style === 'custom' && customStyle ? customStyle : STYLE_PROMPTS[style]
-  // Keep prompt clean and art-focused to avoid safety filters
-  const prompt = `${styleDesc} illustration. Scene: ${description} Artistic style only, no photorealism. High quality digital artwork.`
-
-  const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      instances: [{ prompt }],
-      parameters: {
-        sampleCount: 1,
-        aspectRatio,
-        safetySetting: 'block_few',
-        personGeneration: 'allow_all',
-        addWatermark: false,
-      }
-    }),
-  })
-  if (!res.ok) {
-    const errText = await res.text()
-    throw new Error(`Imagen 4 error: ${errText}`)
-  }
-  const data = await res.json()
-  // Check for safety filter block
-  const prediction = data.predictions?.[0]
-  if (!prediction) {
-    const raiInfo = data.raiFilteredReason || JSON.stringify(data)
-    throw new Error(`Imagen 4 blocked or empty: ${raiInfo}`)
-  }
-  const base64 = prediction.bytesBase64Encoded
-  if (!base64) throw new Error(`No image data in prediction: ${JSON.stringify(prediction)}`)
-  return base64
-}
-
-// Background: save image description for diary generation
 async function describeImageForDiary(imageUrl: string): Promise<string> {
   const apiKey = process.env.DOUBAO_API_KEY!
   const model = process.env.DOUBAO_MODEL || 'doubao-seed-2-0-lite-260428'
@@ -147,7 +92,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const ratio = aspectRatio || '1:1'
 
   try {
-    // Upload original photo
     const originalUrl = await uploadBase64Image(
       `data:${mimeType || 'image/jpeg'};base64,${photoBase64}`,
       `picdiary/${userId}/originals`
@@ -155,30 +99,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const projectId = process.env.GOOGLE_PROJECT_ID!
     const accessToken = await getGoogleAccessToken()
+    const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`
+    const prompt = buildPhotoPrompt(style as ImageStyle, customStyle)
 
-    // Step 1: Analyze photo with Gemini 2.0 Flash (cheap multimodal)
-    const description = await analyzePhoto(photoBase64, mimeType || 'image/jpeg', accessToken, projectId)
-    if (!description) throw new Error('Failed to analyze photo')
+    const aiRes = await fetch(endpoint, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [
+          { inline_data: { mime_type: mimeType || 'image/jpeg', data: photoBase64 } },
+          { text: prompt }
+        ]}],
+        generationConfig: { responseModalities: ['IMAGE'] },
+      }),
+    })
+    if (!aiRes.ok) throw new Error(`Gemini error: ${await aiRes.text()}`)
+    const data = await aiRes.json()
+    const parts = data.candidates?.[0]?.content?.parts || []
+    const imagePart = parts.find((p: any) =>
+      p.inlineData?.mimeType?.startsWith('image/') ||
+      p.inline_data?.mime_type?.startsWith('image/')
+    )
+    if (!imagePart) throw new Error('No image from Gemini')
+    const imageData = imagePart.inlineData?.data || imagePart.inline_data?.data
 
-    // Step 2: Generate stylized image with Imagen 4
-    const generatedBase64 = await generateStylizedImage(description, style as ImageStyle, customStyle, ratio, accessToken, projectId)
-    const generatedUrl = await uploadBase64Image(generatedBase64, `picdiary/${userId}`)
-
+    const generatedUrl = await uploadBase64Image(imageData, `picdiary/${userId}`)
     const sql = neon(process.env.DATABASE_URL!)
     const [entry] = await sql`
       INSERT INTO diary_entries (user_id, date, input_type, input_photo_url, style, custom_style, generated_image_url, aspect_ratio)
       VALUES (${userId}, ${date}, 'photo', ${originalUrl}, ${style}, ${customStyle || null}, ${generatedUrl}, ${ratio})
       RETURNING *
     `
-
-    // Background: save description for diary generation
     describeImageForDiary(originalUrl).then(async (desc) => {
       if (desc) {
         const sql2 = neon(process.env.DATABASE_URL!)
         await sql2`UPDATE diary_entries SET image_description = ${desc} WHERE id = ${entry.id}`.catch(() => {})
       }
     })
-
     return res.status(201).json(entry)
   } catch (err: any) {
     console.error('Generate photo error:', err)
