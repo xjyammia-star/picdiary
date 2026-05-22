@@ -153,7 +153,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { allowed, reason, permissions } = await checkUserPermissions(userId, style)
     if (!allowed) return res.status(403).json({ error: reason, permissions, message: reason === 'daily_limit_reached' ? `今日生成次数已达上限（${permissions.daily_limit}次）` : reason === 'style_not_allowed' ? '该风格需要升级账户才能使用' : '账户已被禁用' })
     try {
-      const originalUrl = await uploadBase64Image(`data:${mimeType || 'image/jpeg'};base64,${photoBase64}`, `picdiary/${userId}/originals`)
+      // Do NOT store original photo - use base64 directly for generation then discard
       const projectId = process.env.GOOGLE_PROJECT_ID!
       const accessToken = await getGoogleAccessToken()
       const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`
@@ -166,8 +166,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!imagePart) throw new Error('No image from Gemini')
       const imageData = imagePart.inlineData?.data || imagePart.inline_data?.data
       const generatedUrl = await uploadBase64Image(imageData, `picdiary/${userId}`)
-      const [entry] = await sql`INSERT INTO diary_entries (user_id, date, input_type, input_photo_url, style, custom_style, generated_image_url, aspect_ratio) VALUES (${userId}, ${date}, 'photo', ${originalUrl}, ${style}, ${customStyle || null}, ${generatedUrl}, ${ratio}) RETURNING *`
-      describeImage(originalUrl).then(async (desc) => { if (desc) { const s = neon(process.env.DATABASE_URL!); await s`UPDATE diary_entries SET image_description = ${desc} WHERE id = ${entry.id}`.catch(() => {}) } })
+      const [entry] = await sql`INSERT INTO diary_entries (user_id, date, input_type, input_photo_url, style, custom_style, generated_image_url, aspect_ratio) VALUES (${userId}, ${date}, 'photo', NULL, ${style}, ${customStyle || null}, ${generatedUrl}, ${ratio}) RETURNING *`
+      // Use generated image for diary description (original photo discarded)
+      describeImage(generatedUrl).then(async (desc) => { if (desc) { const s = neon(process.env.DATABASE_URL!); await s`UPDATE diary_entries SET image_description = ${desc} WHERE id = ${entry.id}`.catch(() => {}) } })
       return res.status(201).json(entry)
     } catch (err: any) { return res.status(500).json({ error: err.message || 'Generation failed' }) }
   }

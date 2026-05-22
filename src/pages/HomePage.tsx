@@ -33,7 +33,7 @@ function resizeImage(file: File, maxSize = 1024): Promise<{base64: string; mimeT
       canvas.width = Math.round(w * scale)
       canvas.height = Math.round(h * scale)
       canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
-      const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
+      const base64 = canvas.toDataURL('image/jpeg', 0.75).split(',')[1]
       URL.revokeObjectURL(url)
       resolve({ base64, mimeType: 'image/jpeg', aspectRatio: ar })
     }
@@ -331,7 +331,7 @@ export default function HomePage() {
                 onChange={async e => {
                   const f = e.target.files?.[0]; if (!f) return
                   setPhotoFile(f); setPhotoPreview(URL.createObjectURL(f))
-                  const { base64, mimeType, aspectRatio } = await resizeImage(f)
+                  const { base64, mimeType, aspectRatio } = await resizeImage(f, 800)
                   setPhotoBase64(base64); setPhotoMime(mimeType); setPhotoAspect(aspectRatio)
                   e.target.value = ''
                 }}
