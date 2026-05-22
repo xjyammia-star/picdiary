@@ -51,7 +51,7 @@ async function uploadBase64Image(base64Data: string, folder: string): Promise<st
 
 // Step 1: Use Gemini 2.0 Flash (multimodal, very cheap) to describe the photo in detail
 async function analyzePhoto(photoBase64: string, mimeType: string, accessToken: string, projectId: string): Promise<string> {
-  const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-2.0-flash:generateContent`
+  const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/gemini-2.5-flash-lite:generateContent`
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
