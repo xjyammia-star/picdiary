@@ -116,6 +116,20 @@ export default function DayPage() {
     if (result === 'clipboard') showToast(t('copied'))
   }
 
+  async function handleShareText(text: string) {
+    try {
+      if (navigator.share) {
+        await navigator.share({ text, title: '绘忆 PicDiary' })
+      } else {
+        await navigator.clipboard.writeText(text)
+        showToast(t('copied'))
+      }
+    } catch {
+      await navigator.clipboard.writeText(text)
+      showToast(t('copied'))
+    }
+  }
+
   async function handleGenerateDiary() {
     if (!date) return
     setGeneratingDiary(true)
@@ -233,7 +247,7 @@ export default function DayPage() {
                   <button className="entry-action-btn" onClick={() => handleCopyText(note.content)}>
                     <Copy size={12} /> {t('copy')}
                   </button>
-                  <button className="entry-action-btn" onClick={() => handleShare(note.content)}>
+                  <button className="entry-action-btn" onClick={() => handleShareText(note.content)}>
                     <Share2 size={12} /> {t('share')}
                   </button>
                   <button className="entry-action-btn danger" onClick={() => handleDelete(note.id, 'note')}>
