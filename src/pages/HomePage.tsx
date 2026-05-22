@@ -91,7 +91,8 @@ export default function HomePage() {
   const [regenerating, setRegenerating] = useState(false)
 
   // Lightbox for today entries
-  const [lightbox, setLightbox] = useState<DiaryEntry | null>(null)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const touchStartX = useRef<number>(0)
 
   const [toast, setToast] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -352,9 +353,9 @@ export default function HomePage() {
               style={{ display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none', paddingBottom:4, cursor:'grab' }}
               onWheel={e => { e.currentTarget.scrollLeft += e.deltaY; e.preventDefault() }}
             >
-              {todayEntries.map(entry => (
+              {todayEntries.map((entry, i) => (
                 <div key={entry.id}
-                  onClick={() => setLightbox(entry)}
+                  onClick={() => setLightboxIndex(i)}
                   style={{ flexShrink:0, width:88, height:88, borderRadius:'var(--radius-md)',
                     overflow:'hidden', cursor:'pointer', background:'var(--surface)', border:'1px solid var(--border)' }}>
                   <img src={entry.generated_image_url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
@@ -494,38 +495,102 @@ export default function HomePage() {
       )}
 
       {/* ── Lightbox for today entries ── */}
-      {lightbox && (
-        <div onClick={() => setLightbox(null)}
-          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.92)',
-            display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-            zIndex:80, padding:16 }}>
-          <img src={lightbox.generated_image_url} alt=""
-            style={{ maxWidth:'100%', maxHeight:'75dvh', borderRadius:'var(--radius-md)', objectFit:'contain' }}
-            onClick={e => e.stopPropagation()} />
-          <div style={{ display:'flex', gap:12, marginTop:16 }} onClick={e => e.stopPropagation()}>
-            <button className="btn btn-sm"
-              style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none', borderRadius:'var(--radius-md)' }}
-              onClick={() => { const a=document.createElement('a'); a.href=lightbox.generated_image_url; a.download='picdiary.jpg'; a.target='_blank'; a.click() }}>
-              <Download size={15} /> {t('download')}
-            </button>
-            <button className="btn btn-sm"
-              style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none', borderRadius:'var(--radius-md)' }}
-              onClick={async () => { try { await navigator.share({ url: lightbox.generated_image_url }) } catch { await navigator.clipboard.writeText(lightbox.generated_image_url); showToast(t('copied')) } }}>
-              <Share2 size={15} /> {t('share')}
-            </button>
-            <button className="btn btn-sm"
-              style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none', borderRadius:'var(--radius-md)' }}
-              onClick={() => setLightbox(null)}>
-              ✕
-            </button>
-          </div>
-          {lightbox.input_text && (
-            <div style={{ marginTop:12, fontSize:'0.82rem', color:'rgba(255,255,255,0.6)', maxWidth:300, textAlign:'center' }}>
-              {lightbox.input_text}
+      {lightboxIndex !== null && todayEntries[lightboxIndex] && (() => {
+        const entry = todayEntries[lightboxIndex]
+        const total = todayEntries.length
+        const goPrev = () => setLightboxIndex(i => i !== null ? (i - 1 + total) % total : null)
+        const goNext = () => setLightboxIndex(i => i !== null ? (i + 1) % total : null)
+        return (
+          <div
+            style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.92)',
+              display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+              zIndex:80, padding:16 }}
+            onClick={() => setLightboxIndex(null)}
+            onKeyDown={e => { if(e.key==='ArrowLeft') goPrev(); if(e.key==='ArrowRight') goNext(); if(e.key==='Escape') setLightboxIndex(null) }}
+            onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
+            onTouchEnd={e => {
+              const dx = e.changedTouches[0].clientX - touchStartX.current
+              if (dx > 50) goPrev()
+              else if (dx < -50) goNext()
+            }}
+            tabIndex={0}
+          >
+            {/* Counter */}
+            {total > 1 && (
+              <div style={{ position:'absolute', top:20, left:'50%', transform:'translateX(-50%)',
+                fontSize:'0.78rem', color:'rgba(255,255,255,0.6)', background:'rgba(0,0,0,0.3)',
+                padding:'4px 12px', borderRadius:20 }}>
+                {lightboxIndex + 1} / {total}
+              </div>
+            )}
+
+            {/* Prev button */}
+            {total > 1 && (
+              <button onClick={e => { e.stopPropagation(); goPrev() }}
+                style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)',
+                  width:40, height:40, borderRadius:'50%', background:'rgba(255,255,255,0.15)',
+                  border:'none', color:'white', cursor:'pointer', fontSize:'1.2rem',
+                  display:'flex', alignItems:'center', justifyContent:'center' }}>
+                ‹
+              </button>
+            )}
+
+            {/* Image */}
+            <img src={entry.generated_image_url} alt=""
+              style={{ maxWidth:'100%', maxHeight:'72dvh', borderRadius:'var(--radius-md)', objectFit:'contain' }}
+              onClick={e => e.stopPropagation()}
+            />
+
+            {/* Next button */}
+            {total > 1 && (
+              <button onClick={e => { e.stopPropagation(); goNext() }}
+                style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)',
+                  width:40, height:40, borderRadius:'50%', background:'rgba(255,255,255,0.15)',
+                  border:'none', color:'white', cursor:'pointer', fontSize:'1.2rem',
+                  display:'flex', alignItems:'center', justifyContent:'center' }}>
+                ›
+              </button>
+            )}
+
+            {/* Actions */}
+            <div style={{ display:'flex', gap:10, marginTop:14 }} onClick={e => e.stopPropagation()}>
+              <button className="btn btn-sm"
+                style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none', borderRadius:'var(--radius-md)' }}
+                onClick={() => { const a=document.createElement('a'); a.href=entry.generated_image_url; a.download='picdiary.jpg'; a.target='_blank'; a.click() }}>
+                <Download size={14} /> {t('download')}
+              </button>
+              <button className="btn btn-sm"
+                style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none', borderRadius:'var(--radius-md)' }}
+                onClick={async () => { try { await navigator.share({ url: entry.generated_image_url }) } catch { await navigator.clipboard.writeText(entry.generated_image_url); showToast(t('copied')) } }}>
+                <Share2 size={14} /> {t('share')}
+              </button>
+              <button className="btn btn-sm"
+                style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none', borderRadius:'var(--radius-md)' }}
+                onClick={() => setLightboxIndex(null)}>
+                ✕
+              </button>
             </div>
-          )}
-        </div>
-      )}
+
+            {entry.input_text && (
+              <div style={{ marginTop:10, fontSize:'0.8rem', color:'rgba(255,255,255,0.55)', maxWidth:300, textAlign:'center' }}>
+                {entry.input_text}
+              </div>
+            )}
+
+            {/* Dot indicators */}
+            {total > 1 && (
+              <div style={{ display:'flex', gap:6, marginTop:12 }} onClick={e => e.stopPropagation()}>
+                {todayEntries.map((_, i) => (
+                  <div key={i} onClick={() => setLightboxIndex(i)}
+                    style={{ width: i===lightboxIndex ? 18 : 6, height:6, borderRadius:3,
+                      background: i===lightboxIndex ? 'white' : 'rgba(255,255,255,0.35)',
+                      cursor:'pointer', transition:'all 0.2s' }} />
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* iOS install guide */}
       {showIOSGuide && (
