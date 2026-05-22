@@ -538,16 +538,17 @@ export default function HomePage() {
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
               {[
-                lang==='zh' ? '1. 点击底部的 分享 按钮 （□↑）' : '1. Tap the Share button (□↑) at the bottom',
-                lang==='zh' ? '2. 向下滚动，选择「添加到主屏幕」' : '2. Scroll down and tap "Add to Home Screen"',
-                lang==='zh' ? '3. 点击右上角「添加」完成安装' : '3. Tap "Add" in the top right corner',
+                lang==='zh' ? '点击底部右下角三个小点（···）' : 'Tap the three dots (···) at the bottom right',
+                lang==='zh' ? '点击底部的 分享 按钮 （□↑）' : 'Tap the Share button (□↑) at the bottom',
+                lang==='zh' ? '向下滚动，选择「添加到主屏幕」' : 'Scroll down and tap "Add to Home Screen"',
+                lang==='zh' ? '点击右上角「添加」完成安装' : 'Tap "Add" in the top right corner',
               ].map((step, i) => (
                 <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
                   <div style={{ width:28, height:28, borderRadius:'50%', background:'var(--accent-light)',
                     display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
                     fontSize:'0.82rem', fontWeight:600, color:'var(--accent-dark)' }}>{i+1}</div>
                   <div style={{ fontSize:'0.9rem', color:'var(--text-secondary)', paddingTop:4 }}>
-                    {step.slice(3)}
+                    {step}
                   </div>
                 </div>
               ))}
