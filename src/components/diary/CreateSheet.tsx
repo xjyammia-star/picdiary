@@ -50,7 +50,7 @@ export default function CreateSheet({ date, onClose, onCreated }: Props) {
   const { t } = useLang()
   const [mode, setMode] = useState<'text' | 'photo'>('text')
   const [text, setText] = useState('')
-  const [style, setStyle] = useState<ImageStyle>('cartoon')
+  const [style, setStyle] = useState<ImageStyle>('anime')
   const [customStyle, setCustomStyle] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string>('')
