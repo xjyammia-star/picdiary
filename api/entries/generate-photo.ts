@@ -74,7 +74,8 @@ async function analyzePhoto(photoBase64: string, mimeType: string, accessToken: 
 // Step 2: Use Imagen 4 to generate stylized image from description
 async function generateStylizedImage(description: string, style: ImageStyle, customStyle: string | undefined, aspectRatio: string, accessToken: string, projectId: string): Promise<string> {
   const styleDesc = style === 'custom' && customStyle ? customStyle : STYLE_PROMPTS[style]
-  const prompt = `Create a ${styleDesc} illustration based on this scene: ${description}. Preserve all elements from the description exactly — people, objects, background, signs and text. Render everything fully in the chosen art style. High quality artwork, no photorealism.`
+  // Keep prompt clean and art-focused to avoid safety filters
+  const prompt = `${styleDesc} illustration. Scene: ${description} Artistic style only, no photorealism. High quality digital artwork.`
 
   const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`
   const res = await fetch(endpoint, {
@@ -82,13 +83,28 @@ async function generateStylizedImage(description: string, style: ImageStyle, cus
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       instances: [{ prompt }],
-      parameters: { sampleCount: 1, aspectRatio, safetySetting: 'block_some', personGeneration: 'allow_adult' }
+      parameters: {
+        sampleCount: 1,
+        aspectRatio,
+        safetySetting: 'block_few',
+        personGeneration: 'allow_all',
+        addWatermark: false,
+      }
     }),
   })
-  if (!res.ok) throw new Error(`Imagen 4 error: ${await res.text()}`)
+  if (!res.ok) {
+    const errText = await res.text()
+    throw new Error(`Imagen 4 error: ${errText}`)
+  }
   const data = await res.json()
-  const base64 = data.predictions?.[0]?.bytesBase64Encoded
-  if (!base64) throw new Error('No image from Imagen 4')
+  // Check for safety filter block
+  const prediction = data.predictions?.[0]
+  if (!prediction) {
+    const raiInfo = data.raiFilteredReason || JSON.stringify(data)
+    throw new Error(`Imagen 4 blocked or empty: ${raiInfo}`)
+  }
+  const base64 = prediction.bytesBase64Encoded
+  if (!base64) throw new Error(`No image data in prediction: ${JSON.stringify(prediction)}`)
   return base64
 }
 
