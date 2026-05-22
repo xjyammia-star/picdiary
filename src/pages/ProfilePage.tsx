@@ -8,7 +8,7 @@ import type { UserProfile } from '../services/api'
 
 export default function ProfilePage() {
   const navigate = useNavigate()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const { user, logout } = useAuth()
 
   const [profile, setProfile] = useState<UserProfile>({})
@@ -167,6 +167,24 @@ export default function ProfilePage() {
                 : t('save')
               }
             </button>
+
+            {/* Upgrade notice */}
+            {!user?.is_admin && (
+              <div style={{
+                marginTop: 8, padding: '12px 16px', borderRadius: 'var(--radius-md)',
+                background: 'linear-gradient(135deg, var(--accent-light), #f0e8ff)',
+                border: '1px solid var(--accent-light)',
+              }}>
+                <div style={{ fontSize: '0.82rem', color: 'var(--accent-dark)', lineHeight: 1.6, textAlign: 'center' }}>
+                  ✨ {lang === 'zh'
+                    ? '由于生图会产生算力费用，若想解锁更多权限请联系管理员'
+                    : 'To unlock more styles & higher limits, contact the admin'}
+                </div>
+                <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--accent)', textAlign: 'center', marginTop: 6 }}>
+                  微信号：xjheinz
+                </div>
+              </div>
+            )}
 
             {/* Admin */}
             {user?.is_admin && (
