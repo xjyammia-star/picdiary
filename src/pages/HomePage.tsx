@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Globe, Camera, X, ChevronDown, ChevronUp, Sparkles, User, Download, Share2, Check, RefreshCw } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Globe, Camera, X, ChevronDown, ChevronUp, Sparkles, User, Download, Share2, Check, RefreshCw, Smartphone } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { usePWAInstall } from '../hooks/usePWAInstall'
 import { useLang } from '../i18n/LangContext'
 import { translations } from '../i18n/translations'
 import { getCalendarMonth, getEntriesByDate, generateFromText, generateFromPhoto } from '../services/api'
@@ -57,6 +58,8 @@ interface GeneratedPreview {
 export default function HomePage() {
   const navigate = useNavigate()
   const { } = useAuth()
+  const { install, canInstall, isIOS, hasPrompt } = usePWAInstall()
+  const [showIOSGuide, setShowIOSGuide] = useState(false)
   const { t, lang, setLang } = useLang()
 
   const today = new Date()
@@ -219,6 +222,12 @@ export default function HomePage() {
       <header className="app-header">
         <div className="header-logo">{t('app_name')}<span>PicDiary</span></div>
         <div className="header-actions">
+          {canInstall && (
+            <button className="btn-icon" title={lang==='zh'?'添加到桌面':'Add to Home Screen'}
+              onClick={() => isIOS ? setShowIOSGuide(true) : install()}>
+              <Smartphone size={18} />
+            </button>
+          )}
           <button className="btn-icon" onClick={() => setLang(lang==='zh'?'en':'zh')}><Globe size={18} /></button>
           <button className="btn-icon" onClick={() => navigate('/profile')}><User size={18} /></button>
         </div>
@@ -516,6 +525,39 @@ export default function HomePage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* iOS install guide */}
+      {showIOSGuide && (
+        <>
+          <div className="sheet-overlay" onClick={() => setShowIOSGuide(false)} />
+          <div className="sheet" style={{ paddingBottom:40 }}>
+            <div className="sheet-handle" />
+            <div style={{ fontFamily:'var(--font-serif)', fontSize:'1.1rem', fontWeight:500, marginBottom:16 }}>
+              {lang==='zh' ? '添加到主屏幕' : 'Add to Home Screen'}
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              {[
+                lang==='zh' ? '1. 点击底部的 分享 按钮 （□↑）' : '1. Tap the Share button (□↑) at the bottom',
+                lang==='zh' ? '2. 向下滚动，选择「添加到主屏幕」' : '2. Scroll down and tap "Add to Home Screen"',
+                lang==='zh' ? '3. 点击右上角「添加」完成安装' : '3. Tap "Add" in the top right corner',
+              ].map((step, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:12 }}>
+                  <div style={{ width:28, height:28, borderRadius:'50%', background:'var(--accent-light)',
+                    display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
+                    fontSize:'0.82rem', fontWeight:600, color:'var(--accent-dark)' }}>{i+1}</div>
+                  <div style={{ fontSize:'0.9rem', color:'var(--text-secondary)', paddingTop:4 }}>
+                    {step.slice(3)}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="btn btn-primary btn-full" style={{ marginTop:24 }}
+              onClick={() => setShowIOSGuide(false)}>
+              {lang==='zh' ? '知道了' : 'Got it'}
+            </button>
+          </div>
+        </>
       )}
 
       {toast && <div className="toast">{toast}</div>}
