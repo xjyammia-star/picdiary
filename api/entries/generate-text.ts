@@ -18,9 +18,29 @@ const STYLE_PROMPTS: Record<ImageStyle, string> = {
   custom: "",
 }
 
-function buildTextPrompt(text: string, style: ImageStyle, customStyle?: string) {
+interface UserProfile {
+  gender?: string
+  birth_year?: number
+  personality?: string
+  interests?: string
+  nickname?: string
+}
+
+function buildTextPrompt(text: string, style: ImageStyle, customStyle?: string, profile?: UserProfile) {
   const styleDesc = style === 'custom' && customStyle ? customStyle : STYLE_PROMPTS[style]
-  return `A beautiful artistic illustration of: "${text}". Rendered ${styleDesc}. High quality, detailed, suitable for a personal diary. No text or watermarks.`
+  const hints: string[] = []
+  if (profile?.gender) {
+    if (profile.gender === '男' || profile.gender === 'Male') hints.push('The main character is male')
+    else if (profile.gender === '女' || profile.gender === 'Female') hints.push('The main character is female')
+  }
+  if (profile?.birth_year) {
+    const age = new Date().getFullYear() - profile.birth_year
+    if (age >= 3 && age <= 12) hints.push(`child approximately ${age} years old`)
+    else if (age >= 13 && age <= 19) hints.push(`teenager approximately ${age} years old`)
+    else if (age >= 20) hints.push(`young adult approximately ${age} years old`)
+  }
+  const subjectHint = hints.length > 0 ? ' Subject: ' + hints.join(', ') + '.' : ''
+  return 'A beautiful artistic illustration of: "' + text + '".' + subjectHint + ' Rendered in ' + styleDesc + '. High quality, detailed, suitable for a personal diary. No text or watermarks.'
 }
 
 async function verifyToken(token: string) {
