@@ -58,7 +58,7 @@ interface GeneratedPreview {
 export default function HomePage() {
   const navigate = useNavigate()
   const { } = useAuth()
-  const { install, canInstall, isIOS, hasPrompt } = usePWAInstall()
+  const { install, canInstall, isIOS } = usePWAInstall()
   const [showIOSGuide, setShowIOSGuide] = useState(false)
   const { t, lang, setLang } = useLang()
 
