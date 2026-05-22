@@ -91,11 +91,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!text || !style || !date) return res.status(400).json({ error: 'Missing fields' })
 
   try {
+    // Fetch user profile for personalized image generation
+    const sql0 = neon(process.env.DATABASE_URL!)
+    let profile: UserProfile | undefined
+    try {
+      const rows = await sql0`SELECT gender, birth_year, personality, interests, nickname FROM user_profiles WHERE user_id = ${userId}`
+      if (rows[0]) profile = rows[0] as UserProfile
+    } catch {}
+
     const projectId = process.env.GOOGLE_PROJECT_ID!
     const location = process.env.GOOGLE_LOCATION || 'us-central1'
     const accessToken = await getGoogleAccessToken()
     const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/imagen-4.0-generate-001:predict`
-    const prompt = buildTextPrompt(text, style, customStyle)
+    const prompt = buildTextPrompt(text, style, customStyle, profile)
     const aiRes = await fetch(endpoint, {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
