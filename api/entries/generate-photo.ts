@@ -3,14 +3,15 @@ import { neon } from '@neondatabase/serverless'
 import { jwtVerify } from 'jose'
 import { v2 as cloudinary } from 'cloudinary'
 
-type ImageStyle = 'cartoon' | 'anime' | 'pixel' | 'sketch' | 'watercolor' | 'custom'
+type ImageStyle = 'anime' | 'storybook' | 'watercolor' | 'sketch' | 'cinematic' | 'film' | 'custom'
 
 const STYLE_PROMPTS: Record<ImageStyle, string> = {
-  cartoon: 'vibrant cartoon illustration style with bold outlines, cel-shading, and saturated colors (like Pixar or Disney animation)',
-  anime: 'Japanese anime illustration style with clean ink lines, cel-shaded coloring, expressive characters, and painterly backgrounds (like Studio Ghibli or Makoto Shinkai)',
-  pixel: 'retro 16-bit pixel art style with a limited color palette, chunky pixels, hard edges, and no anti-aliasing (like a classic SNES video game)',
-  sketch: 'hand-drawn pencil sketch style with expressive line weights, cross-hatching for shadows, and monochrome graphite tones on white paper',
-  watercolor: 'loose watercolor painting style with translucent color washes, soft bleeding edges, visible paper texture, and impressionist brushwork',
+  anime: 'Japanese anime illustration style with clean ink lines, expressive eyes, cel-shaded coloring, and painterly backgrounds (like Studio Ghibli or Makoto Shinkai)',
+  storybook: 'charming children's book illustration style with soft pastel colors, warm rounded shapes, gentle textures, and a cozy storybook mood — perfect for capturing children and family moments',
+  watercolor: 'delicate watercolor illustration with soft translucent washes, visible brushstrokes, gentle color bleeding at edges, and a dreamy artistic atmosphere',
+  sketch: 'hand-drawn pencil sketch with expressive line weights, detailed cross-hatching for shadows, and monochrome graphite tones — like a professional editorial illustration',
+  cinematic: 'cinematic film still with dramatic lighting, shallow depth of field, rich color grading, warm amber tones, and a moody movie-quality atmosphere',
+  film: 'vintage 35mm analog film photography aesthetic with natural grain, subtle light leaks, faded matte colors, warm tones, and a nostalgic emotional quality',
   custom: '',
 }
 

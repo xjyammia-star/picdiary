@@ -3,14 +3,15 @@ import { neon } from '@neondatabase/serverless'
 import { jwtVerify } from 'jose'
 import { v2 as cloudinary } from 'cloudinary'
 
-type ImageStyle = 'cartoon' | 'anime' | 'pixel' | 'sketch' | 'watercolor' | 'custom'
+type ImageStyle = 'anime' | 'storybook' | 'watercolor' | 'sketch' | 'cinematic' | 'film' | 'custom'
 
 const STYLE_PROMPTS: Record<ImageStyle, string> = {
-  cartoon: 'in a vibrant cartoon illustration style, bold outlines, bright colors, playful and expressive',
-  anime: 'in Japanese anime style, clean linework, soft shading, expressive eyes, cel-shaded',
-  pixel: 'in pixel art style, 16-bit retro game aesthetic, chunky pixels, limited color palette',
-  sketch: 'in pencil sketch style, hand-drawn linework, cross-hatching, monochrome with subtle tones',
-  watercolor: 'in soft watercolor painting style, translucent washes, gentle bleeding edges, dreamy atmosphere',
+  anime: 'in Japanese anime illustration style, clean ink lines, expressive eyes, cel-shaded coloring, painterly backgrounds (like Studio Ghibli or Makoto Shinkai)',
+  storybook: 'in a charming children's book illustration style with soft pastel colors, warm rounded shapes, gentle textures, and a cozy storybook mood',
+  watercolor: 'as a delicate watercolor illustration with soft translucent washes, visible brushstrokes, gentle color bleeding, and a dreamy artistic atmosphere',
+  sketch: 'as a hand-drawn pencil sketch with expressive line weights, detailed cross-hatching for shadows, and monochrome graphite tones',
+  cinematic: 'as a cinematic film still with dramatic lighting, shallow depth of field, rich color grading, warm amber tones, and a moody movie-quality atmosphere',
+  film: 'in a vintage 35mm analog film photography style with natural grain, subtle light leaks, faded matte colors, warm tones, and nostalgic emotional quality',
   custom: '',
 }
 

@@ -61,11 +61,12 @@ export const translations = {
     deleted: '已删除',
     downloaded: '已下载',
     // Styles
-    style_cartoon: '卡通',
-    style_anime: '日系动漫',
-    style_pixel: '像素艺术',
+    style_anime: '动漫',
+    style_storybook: '儿童绘本',
+    style_watercolor: '水彩插画',
     style_sketch: '素描',
-    style_watercolor: '水彩',
+    style_cinematic: '电影质感',
+    style_film: '复古胶片',
     style_custom: '自定义',
     // Profile
     profile: '个人设置',
@@ -153,11 +154,12 @@ export const translations = {
     deleted: 'Deleted',
     downloaded: 'Downloaded',
     // Styles
-    style_cartoon: 'Cartoon',
     style_anime: 'Anime',
-    style_pixel: 'Pixel Art',
-    style_sketch: 'Sketch',
+    style_storybook: 'Storybook',
     style_watercolor: 'Watercolor',
+    style_sketch: 'Sketch',
+    style_cinematic: 'Cinematic',
+    style_film: 'Film',
     style_custom: 'Custom',
     // Profile
     profile: 'Settings',

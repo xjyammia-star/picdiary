@@ -7,19 +7,21 @@ export interface User {
 
 // Image style presets
 export type ImageStyle =
-  | 'cartoon'
   | 'anime'
-  | 'pixel'
-  | 'sketch'
+  | 'storybook'
   | 'watercolor'
+  | 'sketch'
+  | 'cinematic'
+  | 'film'
   | 'custom'
 
 export const IMAGE_STYLES: { value: ImageStyle; label_zh: string; label_en: string; emoji: string }[] = [
-  { value: 'cartoon', label_zh: '卡通', label_en: 'Cartoon', emoji: '🎨' },
-  { value: 'anime', label_zh: '日系动漫', label_en: 'Anime', emoji: '🌸' },
-  { value: 'pixel', label_zh: '像素艺术', label_en: 'Pixel Art', emoji: '🎮' },
+  { value: 'anime', label_zh: '动漫', label_en: 'Anime', emoji: '🌸' },
+  { value: 'storybook', label_zh: '儿童绘本', label_en: 'Storybook', emoji: '📖' },
+  { value: 'watercolor', label_zh: '水彩插画', label_en: 'Watercolor', emoji: '💧' },
   { value: 'sketch', label_zh: '素描', label_en: 'Sketch', emoji: '✏️' },
-  { value: 'watercolor', label_zh: '水彩', label_en: 'Watercolor', emoji: '💧' },
+  { value: 'cinematic', label_zh: '电影质感', label_en: 'Cinematic', emoji: '🎬' },
+  { value: 'film', label_zh: '复古胶片', label_en: 'Film', emoji: '📷' },
   { value: 'custom', label_zh: '自定义', label_en: 'Custom', emoji: '✨' },
 ]
 
