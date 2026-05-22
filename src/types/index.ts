@@ -12,7 +12,9 @@ export type ImageStyle =
   | 'watercolor'
   | 'sketch'
   | 'cinematic'
-  | 'film'
+  | 'oilpainting'
+  | 'dreamy'
+  | 'thai'
   | 'custom'
 
 export const IMAGE_STYLES: { value: ImageStyle; label_zh: string; label_en: string; emoji: string }[] = [
@@ -21,7 +23,9 @@ export const IMAGE_STYLES: { value: ImageStyle; label_zh: string; label_en: stri
   { value: 'watercolor', label_zh: '水彩插画', label_en: 'Watercolor', emoji: '💧' },
   { value: 'sketch', label_zh: '素描', label_en: 'Sketch', emoji: '✏️' },
   { value: 'cinematic', label_zh: '电影质感', label_en: 'Cinematic', emoji: '🎬' },
-  { value: 'film', label_zh: '复古胶片', label_en: 'Film', emoji: '📷' },
+  { value: 'oilpainting', label_zh: '油画', label_en: 'Oil Painting', emoji: '🎨' },
+  { value: 'dreamy', label_zh: '梦幻粉彩', label_en: 'Dreamy Pastel', emoji: '🌙' },
+  { value: 'thai', label_zh: '泰式传统', label_en: 'Thai Art', emoji: '🏯' },
   { value: 'custom', label_zh: '自定义', label_en: 'Custom', emoji: '✨' },
 ]
 

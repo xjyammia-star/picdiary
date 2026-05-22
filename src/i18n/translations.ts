@@ -66,7 +66,9 @@ export const translations = {
     style_watercolor: '水彩插画',
     style_sketch: '素描',
     style_cinematic: '电影质感',
-    style_film: '复古胶片',
+    style_oilpainting: '油画',
+    style_dreamy: '梦幻粉彩',
+    style_thai: '泰式传统',
     style_custom: '自定义',
     // Profile
     profile: '个人设置',
@@ -159,7 +161,9 @@ export const translations = {
     style_watercolor: 'Watercolor',
     style_sketch: 'Sketch',
     style_cinematic: 'Cinematic',
-    style_film: 'Film',
+    style_oilpainting: 'Oil Painting',
+    style_dreamy: 'Dreamy Pastel',
+    style_thai: 'Thai Art',
     style_custom: 'Custom',
     // Profile
     profile: 'Settings',
