@@ -52,13 +52,13 @@ async function getGoogleAccessToken(): Promise<string> {
 }
 
 const STYLE_PROMPTS: Record<ImageStyle, string> = {
-  anime: 'Japanese anime illustration style with clean ink lines, expressive eyes, cel-shaded coloring, and painterly backgrounds (like Studio Ghibli or Makoto Shinkai)',
-  storybook: 'charming children's book illustration style with soft pastel colors, warm rounded shapes, gentle textures, and a cozy storybook mood — perfect for capturing children and family moments',
-  watercolor: 'delicate watercolor illustration with soft translucent washes, visible brushstrokes, gentle color bleeding at edges, and a dreamy artistic atmosphere',
-  sketch: 'hand-drawn pencil sketch with expressive line weights, detailed cross-hatching for shadows, and monochrome graphite tones — like a professional editorial illustration',
-  cinematic: 'cinematic film still with dramatic lighting, shallow depth of field, rich color grading, warm amber tones, and a moody movie-quality atmosphere',
-  film: 'vintage 35mm analog film photography aesthetic with natural grain, subtle light leaks, faded matte colors, warm tones, and a nostalgic emotional quality',
-  custom: '',
+  anime: "Japanese anime illustration style with clean ink lines, expressive eyes, cel-shaded coloring, and painterly backgrounds (like Studio Ghibli or Makoto Shinkai)",
+  storybook: "charming children's book illustration style with soft pastel colors, warm rounded shapes, gentle textures, and a cozy storybook mood — perfect for capturing children and family moments",
+  watercolor: "delicate watercolor illustration with soft translucent washes, visible brushstrokes, gentle color bleeding at edges, and a dreamy artistic atmosphere",
+  sketch: "hand-drawn pencil sketch with expressive line weights, detailed cross-hatching for shadows, and monochrome graphite tones — like a professional editorial illustration",
+  cinematic: "cinematic film still with dramatic lighting, shallow depth of field, rich color grading, warm amber tones, and a moody movie-quality atmosphere",
+  film: "vintage 35mm analog film photography aesthetic with natural grain, subtle light leaks, faded matte colors, warm tones, and a nostalgic emotional quality",
+  custom: "",
 }
 
 function buildTextPrompt(text: string, style: ImageStyle, customStyle?: string) {
