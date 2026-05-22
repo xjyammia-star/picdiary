@@ -131,3 +131,48 @@ export async function saveProfile(profile: UserProfile): Promise<UserProfile> {
   })
   return handleResponse(res)
 }
+
+// ─── Permissions ─────────────────────────────────────────────────────────────
+
+export interface UserPermissions {
+  status: string
+  daily_limit: number
+  allowed_styles: string[]
+  styles_unlimited: boolean
+  today_count: number
+}
+
+export async function getUserPermissions(): Promise<UserPermissions> {
+  const res = await fetch('/api/permissions', { headers: authHeaders() })
+  return handleResponse(res)
+}
+
+// ─── Admin ───────────────────────────────────────────────────────────────────
+
+export interface AdminUser {
+  id: string
+  email: string
+  status: string
+  daily_limit: number
+  allowed_styles: string
+  styles_unlimited: boolean
+  created_at: string
+  nickname?: string
+  gender?: string
+  total_entries: number
+  today_entries: number
+}
+
+export async function getAdminUsers(): Promise<AdminUser[]> {
+  const res = await fetch('/api/admin', { headers: authHeaders() })
+  return handleResponse(res)
+}
+
+export async function adminAction(targetUserId: string, action: string, value: any): Promise<void> {
+  const res = await fetch('/api/admin', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ targetUserId, action, value }),
+  })
+  return handleResponse(res)
+}

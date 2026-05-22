@@ -6,7 +6,8 @@ import { shareImage, downloadImage } from '../utils/imageShare'
 import { usePWAInstall } from '../hooks/usePWAInstall'
 import { useLang } from '../i18n/LangContext'
 import { translations } from '../i18n/translations'
-import { getCalendarMonth, getEntriesByDate, generateFromText, generateFromPhoto } from '../services/api'
+import { getCalendarMonth, getEntriesByDate, generateFromText, generateFromPhoto, getUserPermissions } from '../services/api'
+import type { UserPermissions } from '../services/api'
 import { IMAGE_STYLES } from '../types'
 import type { CalendarDay, DiaryEntry, ImageStyle } from '../types'
 
@@ -85,6 +86,7 @@ export default function HomePage() {
   const [photoMime, setPhotoMime] = useState('')
   const [photoAspect, setPhotoAspect] = useState('1:1')
   const [generating, setGenerating] = useState(false)
+  const [permissions, setPermissions] = useState<UserPermissions | null>(null)
 
   // Preview after generation
   const [preview, setPreview] = useState<GeneratedPreview | null>(null)
@@ -110,6 +112,7 @@ export default function HomePage() {
 
   useEffect(() => { loadCalendar() }, [loadCalendar])
   useEffect(() => { loadTodayEntries() }, [loadTodayEntries])
+  useEffect(() => { getUserPermissions().then(setPermissions).catch(() => {}) }, [])
 
   // Calendar grid
   const dayMap = new Map(calendarData.map(d => [d.date, d]))

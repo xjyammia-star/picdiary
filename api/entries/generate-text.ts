@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { neon } from '@neondatabase/serverless'
+import { checkUserPermissions } from '../lib/checkLimits'
 import { jwtVerify } from 'jose'
 import { v2 as cloudinary } from 'cloudinary'
 
@@ -89,6 +90,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { text, style, customStyle, date } = req.body || {}
   if (!text || !style || !date) return res.status(400).json({ error: 'Missing fields' })
+
+  // Check user permissions and daily limits
+  const { allowed, reason, permissions } = await checkUserPermissions(userId, style)
+  if (!allowed) {
+    return res.status(403).json({
+      error: reason,
+      permissions,
+      message: reason === 'daily_limit_reached'
+        ? `今日生成次数已达上限（${permissions.daily_limit}次）`
+        : reason === 'style_not_allowed'
+        ? '该风格需要升级账户才能使用'
+        : '账户已被禁用'
+    })
+  }
 
   try {
     // Fetch user profile for personalized image generation

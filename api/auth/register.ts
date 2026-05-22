@@ -25,5 +25,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     RETURNING id, email, created_at
   `
   const token = await signToken({ userId: user.id, email: user.email })
-  return res.status(201).json({ token, user: { id: user.id, email: user.email, created_at: user.created_at } })
+  return res.status(201).json({ token, user: { id: user.id, email: user.email, created_at: user.created_at, is_admin: user.is_admin || false } })
 }
