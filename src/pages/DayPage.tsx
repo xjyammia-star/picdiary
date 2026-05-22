@@ -120,15 +120,12 @@ export default function DayPage() {
   async function handleShareDiary(content: string) {
     setLoadingMsg(lang === 'zh' ? '生成分享卡片...' : 'Creating card...')
     try {
-      // Use first entry image as preview if available
-      const previewUrl = entries[0]?.generated_image_url
-      const blob = await generateDiaryCard(content, date!, previewUrl)
-      const file = new File([blob], 'picdiary-diary.jpg', { type: 'image/jpeg' })
+      const blob = await generateDiaryCard(content, date!)
       setLoadingMsg('')
+      const file = new File([blob], 'picdiary-diary.jpg', { type: 'image/jpeg' })
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: '绘忆 PicDiary' })
       } else {
-        // Fallback: download the card
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url; a.download = 'picdiary-diary.jpg'; a.click()
@@ -138,21 +135,7 @@ export default function DayPage() {
     } catch (err: any) {
       setLoadingMsg('')
       console.error('Diary card error:', err?.message)
-      // Try without preview image
-      try {
-        const blob2 = await generateDiaryCard(content, date!)
-        const file2 = new File([blob2], 'picdiary-diary.jpg', { type: 'image/jpeg' })
-        if (navigator.canShare && navigator.canShare({ files: [file2] })) {
-          await navigator.share({ files: [file2], title: '绘忆 PicDiary' })
-        } else {
-          const url2 = URL.createObjectURL(blob2)
-          const a2 = document.createElement('a'); a2.href = url2; a2.download = 'picdiary-diary.jpg'; a2.click()
-          setTimeout(() => URL.revokeObjectURL(url2), 1000)
-          showToast(lang === 'zh' ? '已保存分享卡片' : 'Card saved')
-        }
-      } catch {
-        showToast(t('error_generate'))
-      }
+      showToast(t('error_generate'))
     }
   }
 
