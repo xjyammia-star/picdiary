@@ -6,6 +6,51 @@ import { v2 as cloudinary } from 'cloudinary'
 // ── inline helpers ──────────────────────────────────────────────
 type ImageStyle = 'anime' | 'storybook' | 'watercolor' | 'sketch' | 'cinematic' | 'oilpainting' | 'dreamy' | 'thai' | 'custom'
 
+function getDb() { return neon(process.env.DATABASE_URL!) }
+
+async function verifyToken(token: string) {
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+  const { payload } = await jwtVerify(token, secret)
+  return payload as { userId: string; email: string }
+}
+
+function extractToken(req: VercelRequest): string | null {
+  const auth = (req.headers['authorization'] as string) || ''
+  return auth.startsWith('Bearer ') ? auth.slice(7) : null
+}
+
+function initCld() {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+    api_key: process.env.CLOUDINARY_API_KEY!,
+    api_secret: process.env.CLOUDINARY_API_SECRET!,
+  })
+  return cloudinary
+}
+
+async function uploadBase64Image(base64Data: string, folder: string): Promise<string> {
+  const cld = initCld()
+  const dataUri = base64Data.startsWith('data:') ? base64Data : `data:image/png;base64,${base64Data}`
+  const result = await cld.uploader.upload(dataUri, { folder, transformation: [{ quality: 'auto:good' }] })
+  return result.secure_url
+}
+
+async function deleteImage(url: string): Promise<void> {
+  const cld = initCld()
+  const match = url.match(/\/([^/]+\/[^/]+)\.[a-z]+$/)
+  if (match) await cld.uploader.destroy(match[1])
+}
+
+async function getGoogleAccessToken(): Promise<string> {
+  const keyBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_KEY!
+  const keyJson = JSON.parse(Buffer.from(keyBase64, 'base64').toString('utf-8'))
+  const { GoogleAuth } = await import('google-auth-library')
+  const auth = new GoogleAuth({ credentials: keyJson, scopes: ['https://www.googleapis.com/auth/cloud-platform'] })
+  const client = await auth.getClient()
+  const tokenResponse = await client.getAccessToken()
+  return tokenResponse.token!
+}
+
 const STYLE_PROMPTS: Record<ImageStyle, string> = {
   anime: "Japanese anime illustration style with clean ink lines, expressive eyes, cel-shaded coloring, and painterly backgrounds (like Studio Ghibli or Makoto Shinkai)",
   storybook: "charming childrens book illustration style with soft pastel colors, warm rounded shapes, gentle textures, and a cozy storybook mood, perfect for capturing children and family moments",
