@@ -169,7 +169,7 @@ export default function ProfilePage() {
             </button>
 
             {/* Admin */}
-            {(user as any)?.is_admin && (
+            {user?.is_admin && (
               <button className="btn btn-ghost btn-full" onClick={() => navigate('/admin')} style={{ marginTop: 4 }}>
                 🛡️ 管理后台
               </button>
