@@ -276,21 +276,41 @@ export default function HomePage() {
               )}
             </div>
 
+            {/* Daily limit indicator */}
+            {permissions && permissions.daily_limit !== 0 && permissions.status !== 'paid' && (
+              <div style={{ padding:'0 14px 8px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <div style={{ fontSize:'0.72rem', color: permissions.today_count >= permissions.daily_limit ? 'var(--danger)' : 'var(--text-muted)' }}>
+                  {lang==='zh' ? `今日已生成 ${permissions.today_count}/${permissions.daily_limit} 张` : `Today: ${permissions.today_count}/${permissions.daily_limit}`}
+                </div>
+                <div style={{ display:'flex', gap:4 }}>
+                  {Array.from({length: Math.min(permissions.daily_limit, 10)}).map((_,i) => (
+                    <div key={i} style={{ width:7, height:7, borderRadius:'50%', background: i < permissions.today_count ? 'var(--accent)' : 'var(--border)' }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Style grid 3×2 */}
             <div style={{ padding:'0 14px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:6 }}>
-              {IMAGE_STYLES.map(s => (
-                <button key={s.value} onClick={() => setStyle(s.value)}
-                  style={{
-                    padding:'7px 4px', borderRadius:'var(--radius-sm)',
-                    border:`1.5px solid ${style===s.value?'var(--accent)':'var(--border)'}`,
-                    background: style===s.value?'var(--accent-light)':'var(--bg-input)',
-                    color: style===s.value?'var(--accent-dark)':'var(--text-secondary)',
-                    fontSize:'0.75rem', fontWeight:500, cursor:'pointer', fontFamily:'var(--font-sans)',
-                    display:'flex', alignItems:'center', justifyContent:'center', gap:4,
-                  }}>
-                  <span>{s.emoji}</span><span>{t(`style_${s.value}`)}</span>
-                </button>
-              ))}
+              {IMAGE_STYLES.map(s => {
+                const isLocked = !!(permissions && !permissions.styles_unlimited && s.value !== 'custom' && !permissions.allowed_styles.includes(s.value))
+                return (
+                  <button key={s.value}
+                    onClick={() => { if (!isLocked) setStyle(s.value) }}
+                    style={{
+                      padding:'7px 4px', borderRadius:'var(--radius-sm)', position:'relative',
+                      border:`1.5px solid ${style===s.value?'var(--accent)':'var(--border)'}`,
+                      background: style===s.value?'var(--accent-light)':isLocked?'var(--surface)':'var(--bg-input)',
+                      color: style===s.value?'var(--accent-dark)':isLocked?'var(--text-muted)':'var(--text-secondary)',
+                      fontSize:'0.75rem', fontWeight:500, cursor:isLocked?'not-allowed':'pointer',
+                      fontFamily:'var(--font-sans)', display:'flex', alignItems:'center',
+                      justifyContent:'center', gap:4, opacity: isLocked ? 0.55 : 1,
+                    }}>
+                    <span>{s.emoji}</span><span>{t(`style_${s.value}`)}</span>
+                    {isLocked && <span style={{ fontSize:'0.55rem', position:'absolute', top:2, right:3 }}>🔒</span>}
+                  </button>
+                )
+              })}
             </div>
 
             {style === 'custom' && (

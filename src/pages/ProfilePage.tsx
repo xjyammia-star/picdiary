@@ -3,12 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, User, Sparkles } from 'lucide-react'
 import { useLang } from '../i18n/LangContext'
 import { useAuth } from '../hooks/useAuth'
-import { useNavigate } from 'react-router-dom'
 import { getProfile, saveProfile } from '../services/api'
 import type { UserProfile } from '../services/api'
 
 export default function ProfilePage() {
-  const navigate = useNavigate()
   const navigate = useNavigate()
   const { t } = useLang()
   const { user, logout } = useAuth()

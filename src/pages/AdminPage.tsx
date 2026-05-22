@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, RefreshCw, Shield, Users } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Shield } from 'lucide-react'
 import { useLang } from '../i18n/LangContext'
 import { getAdminUsers, adminAction } from '../services/api'
 import { IMAGE_STYLES } from '../types'
