@@ -157,7 +157,14 @@ export default function HomePage() {
         style, customStyle: customStyle||undefined,
         date: todayStr,
       })
-    } catch { showToast(t('error_generate')) }
+    } catch (err: any) {
+      const msg = err.message || ''
+      if (msg.includes('SAFETY_FILTER')) {
+        showToast(lang === 'zh' ? '该风格与照片组合被过滤，请换一种风格试试' : 'Try a different style for this photo')
+      } else {
+        showToast(t('error_generate'))
+      }
+    }
     finally { setGenerating(false) }
   }
 
@@ -187,7 +194,14 @@ export default function HomePage() {
       setPreview(p => p ? { ...p, imageUrl: entry.generated_image_url, entryId: entry.id, style: useStyle, customStyle: useCustom } : null)
       if (newStyle) setStyle(newStyle)
       if (newCustomStyle !== undefined) setCustomStyle(newCustomStyle)
-    } catch { showToast(t('error_generate')) }
+    } catch (err: any) {
+      const msg = err.message || ''
+      if (msg.includes('SAFETY_FILTER')) {
+        showToast(lang === 'zh' ? '该风格与照片组合被过滤，请换一种风格试试' : 'Try a different style for this photo')
+      } else {
+        showToast(t('error_generate'))
+      }
+    }
     finally { setRegenerating(false) }
   }
 

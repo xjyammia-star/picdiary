@@ -172,6 +172,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const parts = candidate.content?.parts || []
       const imagePart = parts.find((p: any) => p.inlineData?.mimeType?.startsWith('image/') || p.inline_data?.mime_type?.startsWith('image/'))
       if (!imagePart) {
+        if (candidate.finishReason === 'IMAGE_PROHIBITED_CONTENT' || candidate.finishReason === 'SAFETY') {
+          throw new Error('SAFETY_FILTER: 该照片与所选风格的组合被安全过滤拦截，请尝试换一种风格')
+        }
         const partTypes = parts.map((p: any) => Object.keys(p).join(',')).join(' | ')
         throw new Error('No image part. finishReason: ' + candidate.finishReason + ' Parts: ' + partTypes)
       }
