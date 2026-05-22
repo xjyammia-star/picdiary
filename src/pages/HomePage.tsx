@@ -563,7 +563,7 @@ export default function HomePage() {
               <button className="btn btn-sm"
                 style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none', borderRadius:'var(--radius-md)' }}
                 onClick={async () => {
-                const result = await shareImage(entry.generated_image_url)
+                const result = await shareImage(entry.generated_image_url, { lang })
                 if (result === 'clipboard') showToast(t('copied'))
               }}>
                 <Share2 size={14} /> {t('share')}

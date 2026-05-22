@@ -13,7 +13,7 @@ import type { DiaryEntry, DiaryNote } from '../types'
 export default function DayPage() {
   const { date } = useParams<{ date: string }>()
   const navigate = useNavigate()
-  const { t } = useLang()
+  const { t, lang } = useLang()
 
   const [entries, setEntries] = useState<DiaryEntry[]>([])
   const [note, setNote] = useState<DiaryNote | null>(null)
@@ -112,7 +112,7 @@ export default function DayPage() {
   }
 
   async function handleShare(url: string) {
-    const result = await shareImage(url)
+    const result = await shareImage(url, { lang })
     if (result === 'clipboard') showToast(t('copied'))
   }
 
