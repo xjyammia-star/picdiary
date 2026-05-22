@@ -159,12 +159,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`
       const prompt = buildPhotoPrompt(style as ImageStyle, customStyle)
       const aiRes = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mimeType || 'image/jpeg', data: photoBase64 } }, { text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'] } }) })
-      if (!aiRes.ok) throw new Error(`Gemini error: ${await aiRes.text()}`)
-      const data = await aiRes.json()
-      const parts = data.candidates?.[0]?.content?.parts || []
+      const aiText = await aiRes.text()
+      if (!aiRes.ok) throw new Error('Gemini HTTP ' + aiRes.status + ': ' + aiText.slice(0, 300))
+      let data: any
+      try { data = JSON.parse(aiText) } catch (e) { throw new Error('Gemini JSON parse failed: ' + aiText.slice(0, 300)) }
+      const candidate = data.candidates?.[0]
+      if (!candidate) {
+        console.error('Gemini no candidates:', JSON.stringify(data).slice(0, 500))
+        throw new Error('No candidates. promptFeedback: ' + JSON.stringify(data.promptFeedback))
+      }
+      console.log('Gemini ok - finishReason:', candidate.finishReason, 'parts:', JSON.stringify(candidate.content?.parts?.map((p: any) => Object.keys(p))))
+      const parts = candidate.content?.parts || []
       const imagePart = parts.find((p: any) => p.inlineData?.mimeType?.startsWith('image/') || p.inline_data?.mime_type?.startsWith('image/'))
-      if (!imagePart) throw new Error('No image from Gemini')
+      if (!imagePart) {
+        const partTypes = parts.map((p: any) => Object.keys(p).join(',')).join(' | ')
+        throw new Error('No image part. finishReason: ' + candidate.finishReason + ' Parts: ' + partTypes)
+      }
       const imageData = imagePart.inlineData?.data || imagePart.inline_data?.data
+      if (!imageData) throw new Error('Image part found but no data')
       const generatedUrl = await uploadBase64Image(imageData, `picdiary/${userId}`)
       const [entry] = await sql`INSERT INTO diary_entries (user_id, date, input_type, input_photo_url, style, custom_style, generated_image_url, aspect_ratio) VALUES (${userId}, ${date}, 'photo', NULL, ${style}, ${customStyle || null}, ${generatedUrl}, ${ratio}) RETURNING *`
       // Use generated image for diary description (original photo discarded)
