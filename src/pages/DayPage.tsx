@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus, BookOpen, Download, Copy, Trash2, RefreshCw, Share2 } from 'lucide-react'
 import { useLang } from '../i18n/LangContext'
 import { shareImage, downloadImage } from '../utils/imageShare'
+import { generateDiaryCard } from '../utils/diaryCard'
 import {
   getEntriesByDate, deleteEntry, regenerateEntry,
   getDiaryNote, generateDiaryNote, deleteDiaryNote
@@ -116,17 +117,27 @@ export default function DayPage() {
     if (result === 'clipboard') showToast(t('copied'))
   }
 
-  async function handleShareText(text: string) {
+  async function handleShareDiary(content: string) {
+    setLoadingMsg(lang === 'zh' ? '生成分享卡片...' : 'Creating card...')
     try {
-      if (navigator.share) {
-        await navigator.share({ text, title: '绘忆 PicDiary' })
+      // Use first entry image as preview if available
+      const previewUrl = entries[0]?.generated_image_url
+      const blob = await generateDiaryCard(content, date!, previewUrl)
+      const file = new File([blob], 'picdiary-diary.jpg', { type: 'image/jpeg' })
+      setLoadingMsg('')
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: '绘忆 PicDiary' })
       } else {
-        await navigator.clipboard.writeText(text)
-        showToast(t('copied'))
+        // Fallback: download the card
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = 'picdiary-diary.jpg'; a.click()
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
+        showToast(lang === 'zh' ? '已保存分享卡片' : 'Card saved')
       }
     } catch {
-      await navigator.clipboard.writeText(text)
-      showToast(t('copied'))
+      setLoadingMsg('')
+      showToast(t('error_generate'))
     }
   }
 
@@ -247,7 +258,7 @@ export default function DayPage() {
                   <button className="entry-action-btn" onClick={() => handleCopyText(note.content)}>
                     <Copy size={12} /> {t('copy')}
                   </button>
-                  <button className="entry-action-btn" onClick={() => handleShareText(note.content)}>
+                  <button className="entry-action-btn" onClick={() => handleShareDiary(note.content)}>
                     <Share2 size={12} /> {t('share')}
                   </button>
                   <button className="entry-action-btn danger" onClick={() => handleDelete(note.id, 'note')}>
