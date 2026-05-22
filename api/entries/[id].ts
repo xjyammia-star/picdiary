@@ -6,60 +6,15 @@ import { v2 as cloudinary } from 'cloudinary'
 // ── inline helpers ──────────────────────────────────────────────
 type ImageStyle = 'anime' | 'storybook' | 'watercolor' | 'sketch' | 'cinematic' | 'oilpainting' | 'dreamy' | 'thai' | 'custom'
 
-function getDb() { return neon(process.env.DATABASE_URL!) }
-
-async function verifyToken(token: string) {
-  const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
-  const { payload } = await jwtVerify(token, secret)
-  return payload as { userId: string; email: string }
-}
-
-function extractToken(req: VercelRequest): string | null {
-  const auth = (req.headers['authorization'] as string) || ''
-  return auth.startsWith('Bearer ') ? auth.slice(7) : null
-}
-
-function initCld() {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-    api_key: process.env.CLOUDINARY_API_KEY!,
-    api_secret: process.env.CLOUDINARY_API_SECRET!,
-  })
-  return cloudinary
-}
-
-async function uploadBase64Image(base64Data: string, folder: string): Promise<string> {
-  const cld = initCld()
-  const dataUri = base64Data.startsWith('data:') ? base64Data : `data:image/png;base64,${base64Data}`
-  const result = await cld.uploader.upload(dataUri, { folder, transformation: [{ quality: 'auto:good' }] })
-  return result.secure_url
-}
-
-async function deleteImage(url: string): Promise<void> {
-  const cld = initCld()
-  const match = url.match(/\/([^/]+\/[^/]+)\.[a-z]+$/)
-  if (match) await cld.uploader.destroy(match[1])
-}
-
-async function getGoogleAccessToken(): Promise<string> {
-  const keyBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_KEY!
-  const keyJson = JSON.parse(Buffer.from(keyBase64, 'base64').toString('utf-8'))
-  const { GoogleAuth } = await import('google-auth-library')
-  const auth = new GoogleAuth({ credentials: keyJson, scopes: ['https://www.googleapis.com/auth/cloud-platform'] })
-  const client = await auth.getClient()
-  const tokenResponse = await client.getAccessToken()
-  retuconst STYLE_PROMPTS: Record<ImageStyle, string> = {
+const STYLE_PROMPTS: Record<ImageStyle, string> = {
   anime: "Japanese anime illustration style with clean ink lines, expressive eyes, cel-shaded coloring, and painterly backgrounds (like Studio Ghibli or Makoto Shinkai)",
-  storybook: "charming children's book illustration style with soft pastel colors, warm rounded shapes, gentle textures, and a cozy storybook mood, perfect for capturing children and family moments",
+  storybook: "charming childrens book illustration style with soft pastel colors, warm rounded shapes, gentle textures, and a cozy storybook mood, perfect for capturing children and family moments",
   watercolor: "delicate watercolor illustration with soft translucent washes, visible brushstrokes, gentle color bleeding at edges, and a dreamy artistic atmosphere",
   sketch: "hand-drawn pencil sketch with expressive line weights, detailed cross-hatching for shadows, and monochrome graphite tones, like a professional editorial illustration",
   cinematic: "cinematic film still with dramatic lighting, shallow depth of field, rich color grading, warm amber tones, and a moody movie-quality atmosphere",
   oilpainting: "classical oil painting with visible impasto brushstrokes, rich jewel-toned colors, dramatic chiaroscuro lighting, and the texture and depth of canvas, like a museum masterpiece",
   dreamy: "dreamy pastel fantasy illustration with soft cotton-candy colors, glowing light effects, sparkles, airy gradients, kawaii-inspired aesthetic, and a magical whimsical mood",
   thai: "traditional Thai mural painting style inspired by Wat Phra Kaew temple art, with intricate golden linework, jewel-toned colors, ornate decorative patterns, graceful figures in traditional Thai costume, and mythological elements",
-  custom: "",
-}
-l quality",
   custom: "",
 }
 
