@@ -21,7 +21,7 @@ export async function generateFromText(params: {
   customStyle?: string
   date: string
 }): Promise<DiaryEntry> {
-  const res = await fetch('/api/entries/generate-text', {
+  const res = await fetch('/api/entries?action=generate-text', {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify(params),
@@ -37,7 +37,7 @@ export async function generateFromPhoto(params: {
   date: string
   aspectRatio: string
 }): Promise<DiaryEntry> {
-  const res = await fetch('/api/entries/generate-photo', {
+  const res = await fetch('/api/entries?action=generate-photo', {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify(params),
