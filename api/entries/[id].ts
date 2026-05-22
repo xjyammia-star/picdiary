@@ -60,6 +60,11 @@ const STYLE_PROMPTS: Record<ImageStyle, string> = {
   custom: '',
 }
 
+function buildTextPrompt(text: string, style: ImageStyle, customStyle?: string) {
+  const styleDesc = style === 'custom' && customStyle ? customStyle : STYLE_PROMPTS[style]
+  return 'A beautiful artistic illustration of: "' + text + '". Rendered in ' + styleDesc + '. High quality, detailed, suitable for a personal diary. No text or watermarks.'
+}
+
 function buildPhotoPrompt(style: ImageStyle, customStyle?: string) {
   const styleDesc = style === 'custom' && customStyle ? customStyle : STYLE_PROMPTS[style]
   return 'Redraw this entire photo as a ' + styleDesc + '. CRITICAL RULES: (1) Every single element in the original photo must appear in the output at the same position — people, objects, background, signs, text, banners, birds, trees, buildings, everything. Do NOT remove, erase or omit any element. (2) All text, logos, signs and banners must remain legible and in the same location, rendered in the chosen art style. (3) The entire image — foreground, background, every detail — must be fully redrawn in the chosen art style. Nothing should look photorealistic. (4) Maintain the original composition, framing and aspect ratio exactly.'
@@ -67,9 +72,8 @@ function buildPhotoPrompt(style: ImageStyle, customStyle?: string) {
 
 async function generateImageFromText(prompt: string, aspectRatio = '1:1'): Promise<string> {
   const projectId = process.env.GOOGLE_PROJECT_ID!
-  const location = process.env.GOOGLE_LOCATION || 'us-central1'
   const accessToken = await getGoogleAccessToken()
-  const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/imagen-4.0-generate-001:predict`
+  const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/imagen-4.0-generate-001:predict`
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
