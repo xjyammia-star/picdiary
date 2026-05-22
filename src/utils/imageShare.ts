@@ -80,7 +80,7 @@ async function addQRWatermark(imageUrl: string): Promise<Blob> {
 // Share image WITH watermark QR code
 export async function shareImage(
   imageUrl: string,
-  options?: { lang?: 'zh' | 'en' }
+  _options?: { lang?: 'zh' | 'en' }
 ): Promise<'shared' | 'clipboard' | 'failed'> {
   try {
     const watermarkedBlob = await addQRWatermark(imageUrl)
