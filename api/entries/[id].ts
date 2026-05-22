@@ -88,7 +88,6 @@ async function generateImageFromText(prompt: string, aspectRatio = '1:1'): Promi
 
 async function generateImageFromPhoto(photoBase64: string, mimeType: string, prompt: string): Promise<string> {
   const projectId = process.env.GOOGLE_PROJECT_ID!
-  const location = process.env.GOOGLE_LOCATION || 'us-central1'
   const accessToken = await getGoogleAccessToken()
   const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`
   const res = await fetch(endpoint, {
