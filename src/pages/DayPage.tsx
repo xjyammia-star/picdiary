@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus, BookOpen, Download, Copy, Trash2, RefreshCw, Share2 } from 'lucide-react'
 import { useLang } from '../i18n/LangContext'
+import { shareImage, downloadImage } from '../utils/imageShare'
 import {
   getEntriesByDate, deleteEntry, regenerateEntry,
   getDiaryNote, generateDiaryNote, deleteDiaryNote
@@ -87,11 +88,7 @@ export default function DayPage() {
   }
 
   async function handleDownload(url: string) {
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `picdiary-${date}.jpg`
-    a.target = '_blank'
-    a.click()
+    await downloadImage(url, `picdiary-${date}.jpg`)
     showToast(t('downloaded'))
   }
 
@@ -115,12 +112,8 @@ export default function DayPage() {
   }
 
   async function handleShare(url: string) {
-    try {
-      await navigator.share({ url })
-    } catch {
-      await navigator.clipboard.writeText(url)
-      showToast(t('copied'))
-    }
+    const result = await shareImage(url)
+    if (result === 'clipboard') showToast(t('copied'))
   }
 
   async function handleGenerateDiary() {

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Globe, Camera, X, ChevronDown, ChevronUp, Sparkles, User, Download, Share2, Check, RefreshCw, Smartphone } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { shareImage, downloadImage } from '../utils/imageShare'
 import { usePWAInstall } from '../hooks/usePWAInstall'
 import { useLang } from '../i18n/LangContext'
 import { translations } from '../i18n/translations'
@@ -556,12 +557,15 @@ export default function HomePage() {
             <div style={{ display:'flex', gap:10, marginTop:14 }} onClick={e => e.stopPropagation()}>
               <button className="btn btn-sm"
                 style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none', borderRadius:'var(--radius-md)' }}
-                onClick={() => { const a=document.createElement('a'); a.href=entry.generated_image_url; a.download='picdiary.jpg'; a.target='_blank'; a.click() }}>
+                onClick={() => downloadImage(entry.generated_image_url)}>
                 <Download size={14} /> {t('download')}
               </button>
               <button className="btn btn-sm"
                 style={{ background:'rgba(255,255,255,0.15)', color:'white', border:'none', borderRadius:'var(--radius-md)' }}
-                onClick={async () => { try { await navigator.share({ url: entry.generated_image_url }) } catch { await navigator.clipboard.writeText(entry.generated_image_url); showToast(t('copied')) } }}>
+                onClick={async () => {
+                const result = await shareImage(entry.generated_image_url)
+                if (result === 'clipboard') showToast(t('copied'))
+              }}>
                 <Share2 size={14} /> {t('share')}
               </button>
               <button className="btn btn-sm"
