@@ -60,8 +60,18 @@ export async function generateDiaryCard(
   if (previewImageUrl) {
     try {
       const img = await new Promise<HTMLImageElement>((res, rej) => {
-        const el = new Image(); el.crossOrigin = 'anonymous'
-        el.onload = () => res(el); el.onerror = rej; el.src = previewImageUrl
+        const el = new Image()
+        // Try with crossOrigin first, fall back without it
+        el.crossOrigin = 'anonymous'
+        el.onload = () => res(el)
+        el.onerror = () => {
+          // Retry without crossOrigin
+          const el2 = new Image()
+          el2.onload = () => res(el2)
+          el2.onerror = () => rej(new Error('Image load failed'))
+          el2.src = previewImageUrl + '?t=' + Date.now()
+        }
+        el.src = previewImageUrl
       })
       const radius = 16
       ctx.save()

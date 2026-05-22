@@ -135,9 +135,24 @@ export default function DayPage() {
         setTimeout(() => URL.revokeObjectURL(url), 1000)
         showToast(lang === 'zh' ? '已保存分享卡片' : 'Card saved')
       }
-    } catch {
+    } catch (err: any) {
       setLoadingMsg('')
-      showToast(t('error_generate'))
+      console.error('Diary card error:', err?.message)
+      // Try without preview image
+      try {
+        const blob2 = await generateDiaryCard(content, date!)
+        const file2 = new File([blob2], 'picdiary-diary.jpg', { type: 'image/jpeg' })
+        if (navigator.canShare && navigator.canShare({ files: [file2] })) {
+          await navigator.share({ files: [file2], title: '绘忆 PicDiary' })
+        } else {
+          const url2 = URL.createObjectURL(blob2)
+          const a2 = document.createElement('a'); a2.href = url2; a2.download = 'picdiary-diary.jpg'; a2.click()
+          setTimeout(() => URL.revokeObjectURL(url2), 1000)
+          showToast(lang === 'zh' ? '已保存分享卡片' : 'Card saved')
+        }
+      } catch {
+        showToast(t('error_generate'))
+      }
     }
   }
 
