@@ -2,7 +2,23 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { neon } from '@neondatabase/serverless'
 import { jwtVerify } from 'jose'
 import { v2 as cloudinary } from 'cloudinary'
-import { checkUserPermissions } from './lib/checkLimits'
+// Inline permission check
+async function checkUserPermissions(userId: string, style: string) {
+  const sql = neon(process.env.DATABASE_URL!)
+  const [user] = await sql`SELECT status, daily_limit, allowed_styles, styles_unlimited FROM users WHERE id = ${userId}`
+  if (!user) return { allowed: false, reason: 'user_not_found', permissions: { status:'free', daily_limit:3, allowed_styles:['anime'], styles_unlimited:false, today_count:0 } }
+  if (user.status === 'banned') return { allowed: false, reason: 'banned', permissions: { status:'banned', daily_limit:0, allowed_styles:[], styles_unlimited:false, today_count:0 } }
+  const [countRow] = await sql`SELECT COUNT(*)::int AS count FROM diary_entries WHERE user_id = ${userId} AND date = CURRENT_DATE`
+  const today_count = countRow?.count || 0
+  const permissions = { status: user.status || 'free', daily_limit: user.daily_limit ?? 3, allowed_styles: user.styles_unlimited ? [] : (user.allowed_styles || 'anime').split(',').map((s: string) => s.trim()), styles_unlimited: user.styles_unlimited ?? false, today_count }
+  if (user.status === 'paid') return { allowed: true, permissions }
+  if (user.daily_limit !== 0 && today_count >= (user.daily_limit ?? 3)) return { allowed: false, reason: 'daily_limit_reached', permissions }
+  if (!user.styles_unlimited && style !== 'custom') {
+    const allowed = (user.allowed_styles || 'anime').split(',').map((s: string) => s.trim())
+    if (!allowed.includes(style)) return { allowed: false, reason: 'style_not_allowed', permissions }
+  }
+  return { allowed: true, permissions }
+}
 
 type ImageStyle = 'anime' | 'storybook' | 'watercolor' | 'sketch' | 'cinematic' | 'oilpainting' | 'dreamy' | 'thai' | 'custom'
 
