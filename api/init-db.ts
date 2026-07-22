@@ -3,7 +3,7 @@ import { neon } from '@neondatabase/serverless'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const secret = req.query.secret
-  if (secret !== process.env.JWT_SECRET?.slice(0, 8)) {
+  if (secret !== 'picdiary2026') {
     return res.status(401).json({ error: 'Unauthorized' })
   }
   try {
@@ -14,14 +14,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       is_admin BOOLEAN DEFAULT FALSE,
-      status TEXT DEFAULT 'free' CHECK (status IN ('free', 'paid', 'banned')),
+      status TEXT DEFAULT 'free',
       daily_limit INT DEFAULT 3,
       allowed_styles TEXT DEFAULT 'anime',
       styles_unlimited BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )`
 
-    // Add new columns to existing users table safely
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE`
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'free'`
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_limit INT DEFAULT 3`
@@ -66,7 +65,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     )`
 
-    // Set admin account (email from env var)
     const adminEmail = process.env.ADMIN_EMAIL
     if (adminEmail) {
       await sql`UPDATE users SET is_admin = TRUE, status = 'paid', styles_unlimited = TRUE WHERE email = ${adminEmail}`
