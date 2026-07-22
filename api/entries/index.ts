@@ -155,15 +155,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       // Do NOT store original photo - use base64 directly for generation then discard
       const projectId = process.env.GOOGLE_PROJECT_ID!
-      console.log('Starting photo generation, projectId:', projectId ? 'set' : 'MISSING')
-      let accessToken: string
-      try {
-        accessToken = await getGoogleAccessToken()
-        console.log('Got access token OK')
-      } catch (tokenErr: any) {
-        throw new Error('Token error: ' + tokenErr.message)
-      }
-      const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image-preview:generateContent`
+      const accessToken = await getGoogleAccessToken()
+      const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image:generateContent`
       const prompt = buildPhotoPrompt(style as ImageStyle, customStyle)
       const aiRes = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mimeType || 'image/jpeg', data: photoBase64 } }, { text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'] } }) })
       const aiText = await aiRes.text()
