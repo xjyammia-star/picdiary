@@ -120,6 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // POST /api/entries?action=generate-text
+  // 已迁移至 gemini-3.1-flash-image（原 imagen-4.0-generate-001 将于 2026-08-17 停用）
   if (req.method === 'POST' && action === 'generate-text') {
     const { text, style, customStyle, date } = req.body || {}
     if (!text || !style || !date) return res.status(400).json({ error: 'Missing fields' })
@@ -129,16 +130,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let profile: UserProfile | undefined
       try { const rows = await sql`SELECT gender, birth_year FROM user_profiles WHERE user_id = ${userId}`; if (rows[0]) profile = rows[0] as UserProfile } catch {}
       const projectId = process.env.GOOGLE_PROJECT_ID!
-      const location = process.env.GOOGLE_LOCATION || 'us-central1'
       const accessToken = await getGoogleAccessToken()
-      const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/imagen-4.0-generate-001:predict`
+      const endpoint = `https://aiplatform.googleapis.com/v1/projects/${projectId}/locations/global/publishers/google/models/gemini-3.1-flash-image:generateContent`
       const prompt = buildTextPrompt(text, style as ImageStyle, customStyle, profile)
-      const aiRes = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ instances: [{ prompt }], parameters: { sampleCount: 1, aspectRatio: '1:1', safetySetting: 'block_some', personGeneration: 'allow_all' } }) })
-      if (!aiRes.ok) throw new Error(`Imagen error: ${await aiRes.text()}`)
-      const data = await aiRes.json()
-      const base64 = data.predictions?.[0]?.bytesBase64Encoded
-      if (!base64) throw new Error('No image returned')
-      const imageUrl = await uploadBase64Image(base64, `picdiary/${userId}`)
+      const aiRes = await fetch(endpoint, { method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'] } }) })
+      const aiText = await aiRes.text()
+      if (!aiRes.ok) throw new Error('Gemini text-to-image HTTP ' + aiRes.status + ': ' + aiText.slice(0, 300))
+      let data: any
+      try { data = JSON.parse(aiText) } catch (e) { throw new Error('Gemini JSON parse failed: ' + aiText.slice(0, 300)) }
+      const candidate = data.candidates?.[0]
+      if (!candidate) {
+        console.error('Gemini no candidates:', JSON.stringify(data).slice(0, 500))
+        throw new Error('No candidates. promptFeedback: ' + JSON.stringify(data.promptFeedback))
+      }
+      const parts = candidate.content?.parts || []
+      const imagePart = parts.find((p: any) => p.inlineData?.mimeType?.startsWith('image/') || p.inline_data?.mime_type?.startsWith('image/'))
+      if (!imagePart) {
+        if (candidate.finishReason === 'IMAGE_PROHIBITED_CONTENT' || candidate.finishReason === 'SAFETY') {
+          throw new Error('SAFETY_FILTER: 该内容被安全过滤拦截，请修改描述后重试')
+        }
+        const partTypes = parts.map((p: any) => Object.keys(p).join(',')).join(' | ')
+        throw new Error('No image part. finishReason: ' + candidate.finishReason + ' Parts: ' + partTypes)
+      }
+      const imageData = imagePart.inlineData?.data || imagePart.inline_data?.data
+      if (!imageData) throw new Error('Image part found but no data')
+      const imageUrl = await uploadBase64Image(imageData, `picdiary/${userId}`)
       const [entry] = await sql`INSERT INTO diary_entries (user_id, date, input_type, input_text, style, custom_style, generated_image_url, aspect_ratio) VALUES (${userId}, ${date}, 'text', ${text}, ${style}, ${customStyle || null}, ${imageUrl}, '1:1') RETURNING *`
       describeImage(imageUrl).then(async (desc) => { if (desc) { const s = neon(process.env.DATABASE_URL!); await s`UPDATE diary_entries SET image_description = ${desc} WHERE id = ${entry.id}`.catch(() => {}) } })
       return res.status(201).json(entry)
